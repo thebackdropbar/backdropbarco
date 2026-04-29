@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Product — The Backdrop Bar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:wght@300;400&family=Jost:wght@200;300;400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --cream: #fdf8f3; --parchment: #f5ede1; --blush: #e8cfc2; --rose: #d4a89a;
+      --warm-tan: #c9b49a; --text-dark: #3a2e28; --text-mid: #7a6a60; --text-soft: #a99589;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--cream); color: var(--text-dark); font-family: 'Jost', sans-serif; font-weight: 300; }
+
+    /* ── TOP NAV ── */
+    .top-nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 40px;
+      background: var(--cream);
+      border-bottom: 1px solid rgba(201,180,154,0.25);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .top-nav-logo {
+      font-family: 'Great Vibes', cursive;
+      font-size: 1.6rem;
+      color: var(--text-dark);
+      text-decoration: none;
+    }
+    .top-nav-back {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--text-soft); text-decoration: none;
+      transition: color 0.2s;
+    }
+    .top-nav-back:hover { color: var(--text-dark); }
+    .top-nav-back svg { width: 14px; height: 14px; }
+    .top-nav-cart { color: var(--text-mid); cursor: pointer; }
+
+    /* ── MAIN LAYOUT ── */
+    .product-page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 52px;
+      align-items: start;
+    }
+
+    /* ── LEFT: IMAGE GALLERY ── */
+    .gallery { position: sticky; top: 80px; }
+
+    .main-image-wrap {
+      width: 100%;
+      aspect-ratio: 4/5;
+      border-radius: 16px;
+      overflow: hidden;
+      background: var(--parchment);
+      position: relative;
+    }
+    .main-image-wrap svg,
+    .main-image-wrap img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+    }
+
+    /* Swipe arrows */
+    .gallery-arrow {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      background: rgba(255,255,255,0.85);
+      border: 1px solid rgba(201,180,154,0.35);
+      border-radius: 50%;
+      width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; z-index: 5;
+      transition: background 0.2s;
+    }
+    .gallery-arrow:hover { background: white; }
+    .gallery-arrow.prev { left: 12px; }
+    .gallery-arrow.next { right: 12px; }
+    .gallery-arrow svg { width: 16px; height: 16px; stroke: var(--text-mid); }
+
+    /* Thumbnails */
+    .thumbnails {
+      display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap;
+    }
+    .thumb {
+      width: 68px; height: 68px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 2px solid transparent;
+      cursor: pointer;
+      background: var(--parchment);
+      transition: border-color 0.2s;
+      flex-shrink: 0;
+    }
+    .thumb.active { border-color: var(--warm-tan); }
+    .thumb svg, .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    /* ── RIGHT: PRODUCT INFO ── */
+    .product-info { display: flex; flex-direction: column; gap: 20px; }
+
+    .product-category {
+      font-size: 0.62rem; letter-spacing: 0.26em;
+      text-transform: uppercase; color: var(--text-soft);
+    }
+    .product-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      font-weight: 300; line-height: 1.2;
+      color: var(--text-dark);
+    }
+    .product-price {
+      font-size: 1.3rem; font-weight: 300;
+      color: var(--text-dark); letter-spacing: 0.04em;
+    }
+    .product-price span {
+      font-size: 0.65rem; letter-spacing: 0.14em;
+      color: var(--text-soft); text-transform: uppercase; margin-left: 6px;
+    }
+
+    .product-divider {
+      height: 1px; background: rgba(201,180,154,0.25);
+    }
+
+    /* Variant selector */
+    .variant-label {
+      font-size: 0.65rem; letter-spacing: 0.2em;
+      text-transform: uppercase; color: var(--text-soft);
+      margin-bottom: 10px;
+    }
+    .variants {
+      display: flex; gap: 10px; flex-wrap: wrap;
+    }
+    .variant-btn {
+      padding: 10px 18px;
+      border: 1px solid rgba(201,180,154,0.5);
+      border-radius: 8px;
+      background: white;
+      font-family: 'Jost', sans-serif;
+      font-size: 0.72rem; font-weight: 300;
+      letter-spacing: 0.1em;
+      color: var(--text-mid);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .variant-btn:hover { border-color: var(--warm-tan); color: var(--text-dark); }
+    .variant-btn.selected {
+      border-color: var(--warm-tan);
+      background: rgba(201,180,154,0.12);
+      color: var(--text-dark);
+    }
+
+    /* Quantity */
+    .qty-label {
+      font-size: 0.65rem; letter-spacing: 0.2em;
+      text-transform: uppercase; color: var(--text-soft);
+      margin-bottom: 10px;
+    }
+    .qty-wrap {
+      display: flex; align-items: center; gap: 0;
+      border: 1px solid rgba(201,180,154,0.5);
+      border-radius: 8px; overflow: hidden;
+      width: fit-content;
+    }
+    .qty-btn {
+      width: 40px; height: 40px;
+      background: none; border: none;
+      font-size: 1.1rem; font-weight: 300;
+      color: var(--text-mid); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+    .qty-btn:hover { background: rgba(201,180,154,0.12); }
+    .qty-display {
+      width: 44px; height: 40px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem; font-weight: 300;
+      border-left: 1px solid rgba(201,180,154,0.35);
+      border-right: 1px solid rgba(201,180,154,0.35);
+      color: var(--text-dark);
+    }
+
+    /* Add to cart button */
+    .add-to-cart-btn {
+      width: 100%;
+      padding: 16px;
+      background: var(--text-dark);
+      color: white;
+      border: none; border-radius: 10px;
+      font-family: 'Jost', sans-serif;
+      font-size: 0.72rem; font-weight: 300;
+      letter-spacing: 0.22em; text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.25s;
+    }
+    .add-to-cart-btn:hover { background: var(--text-mid); }
+
+    .product-note {
+      font-size: 0.65rem; letter-spacing: 0.1em;
+      color: var(--text-soft); line-height: 1.8;
+      padding: 14px 16px;
+      background: rgba(245,238,230,0.6);
+      border-radius: 8px;
+      border: 1px solid rgba(201,180,154,0.2);
+    }
+
+    /* ── YOU MAY ALSO LIKE ── */
+    .also-like {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+    .also-like-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .also-like-eyebrow {
+      font-size: 0.62rem; letter-spacing: 0.28em;
+      text-transform: uppercase; color: var(--text-soft);
+      margin-bottom: 10px;
+    }
+    .also-like-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.8rem; font-weight: 300;
+      color: var(--text-dark);
+    }
+    .also-like-line {
+      width: 36px; height: 1px;
+      background: var(--warm-tan);
+      margin: 14px auto 0;
+    }
+
+    .also-like-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+    }
+    .also-card {
+      border-radius: 12px; overflow: hidden;
+      background: var(--parchment);
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.3s, box-shadow 0.3s;
+      display: block;
+    }
+    .also-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 28px rgba(58,46,40,0.1);
+    }
+    .also-card-img {
+      width: 100%; aspect-ratio: 3/4; overflow: hidden;
+    }
+    .also-card-img svg { width: 100%; height: 100%; display: block; }
+    .also-card-info { padding: 12px 14px 16px; }
+    .also-card-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.95rem; font-weight: 400;
+      color: var(--text-dark); margin-bottom: 4px;
+    }
+    .also-card-price {
+      font-size: 0.65rem; letter-spacing: 0.12em;
+      color: var(--text-soft);
+    }
+
+    /* ── DATE FIELD ── */
+    .date-field {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 11px 14px;
+      border: 1px solid rgba(201,180,154,0.5);
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+      font-size: 0.72rem; font-weight: 300;
+      color: var(--text-mid);
+      transition: border-color 0.2s;
+      user-select: none;
+    }
+    .date-field:hover { border-color: var(--warm-tan); }
+    .date-field.filled { color: var(--text-dark); }
+
+    /* Calendar day cells */
+    .cal-day {
+      text-align: center; padding: 7px 2px;
+      font-size: 0.75rem; font-weight: 300;
+      color: var(--text-mid);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .cal-day:hover:not(.disabled):not(.empty) { background: rgba(201,180,154,0.2); }
+    .cal-day.selected { background: var(--warm-tan); color: white; }
+    .cal-day.today { font-weight: 400; color: var(--text-dark); }
+    .cal-day.disabled { color: rgba(201,180,154,0.4); cursor: default; }
+    .cal-day.empty { cursor: default; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .product-page { grid-template-columns: 1fr; gap: 32px; padding: 24px 16px 60px; }
+      .gallery { position: static; }
+      .also-like-grid { grid-template-columns: repeat(2, 1fr); }
+      .top-nav { padding: 14px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav class="top-nav">
+  <a href="index.html" class="top-nav-back">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M19 12H5M12 5l-7 7 7 7"/>
+    </svg>
+    Back
+  </a>
+  <a href="index.html" class="top-nav-logo">the backdrop bar</a>
+  <div class="top-nav-cart">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+      <line x1="3" y1="6" x2="21" y2="6"/>
+      <path d="M16 10a4 4 0 01-8 0"/>
+    </svg>
+  </div>
+</nav>
+
+<!-- ── PRODUCT LAYOUT ── -->
+<div class="product-page">
+
+  <!-- LEFT: Gallery -->
+  <div class="gallery">
+    <div class="main-image-wrap" id="mainImageWrap">
+      <div class="gallery-arrow prev" onclick="prevImage()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </div>
+      <div id="mainImageContent">
+        <!-- Image 1 (default) — Blush Floral Arch SVG placeholder -->
+        <svg viewBox="0 0 400 530" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="pg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f0e4d8"/><stop offset="100%" stop-color="#e8d4c4"/></linearGradient></defs>
+          <rect width="400" height="530" fill="url(#pg1)"/>
+          <path d="M80 530 L80 220 Q80 60 200 60 Q320 60 320 220 L320 530" stroke="rgba(180,150,130,0.35)" stroke-width="1.5" fill="rgba(255,255,255,0.15)"/>
+          <circle cx="200" cy="72" r="32" fill="rgba(232,207,194,0.6)"/>
+          <circle cx="200" cy="72" r="12" fill="rgba(210,175,158,0.75)"/>
+          <circle cx="82" cy="175" r="22" fill="rgba(225,196,182,0.55)"/>
+          <circle cx="82" cy="175" r="8" fill="rgba(196,160,144,0.7)"/>
+          <circle cx="318" cy="195" r="20" fill="rgba(220,192,178,0.5)"/>
+          <circle cx="318" cy="195" r="7" fill="rgba(192,155,138,0.7)"/>
+          <text x="200" y="380" text-anchor="middle" font-family="Jost,sans-serif" font-size="13" fill="rgba(160,140,125,0.6)" letter-spacing="3">YOUR PHOTO HERE</text>
+        </svg>
+      </div>
+      <div class="gallery-arrow next" onclick="nextImage()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </div>
+
+    <!-- Thumbnails -->
+    <div class="thumbnails" id="thumbnailRow">
+      <div class="thumb active" onclick="selectImage(0)">
+        <svg viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="130" fill="#f0e4d8"/><circle cx="50" cy="30" r="18" fill="rgba(232,207,194,0.7)"/><circle cx="50" cy="30" r="8" fill="rgba(210,175,158,0.8)"/></svg>
+      </div>
+      <div class="thumb" onclick="selectImage(1)">
+        <svg viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="130" fill="#ede0d0"/><rect x="20" y="10" width="60" height="110" rx="30" fill="none" stroke="rgba(180,155,130,0.4)" stroke-width="2"/></svg>
+      </div>
+      <div class="thumb" onclick="selectImage(2)">
+        <svg viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="130" fill="#f8f0e8"/><ellipse cx="50" cy="40" rx="22" ry="32" fill="rgba(215,198,175,0.6)"/></svg>
+      </div>
+      <div class="thumb" onclick="selectImage(3)">
+        <svg viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="130" fill="#faf5ee"/><path d="M20 130 L20 55 Q20 10 50 10 Q80 10 80 55 L80 130" stroke="rgba(165,140,118,0.35)" stroke-width="2" fill="rgba(255,255,255,0.2)"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Info -->
+  <div class="product-info">
+    <div>
+      <div class="product-category">Backdrops · The Backdrop Bar</div>
+      <h1 class="product-title" id="productTitle">Blush Floral Arch Panel</h1>
+    </div>
+
+    <div class="product-price" id="productPrice">
+      $85 <span>per day</span>
+    </div>
+
+    <div class="product-divider"></div>
+
+    <!-- Variant selector -->
+    <div>
+      <div class="variant-label">Select Style</div>
+      <div class="variants">
+        <button class="variant-btn selected" onclick="selectVariant(this, 0)">Blush Pink</button>
+        <button class="variant-btn" onclick="selectVariant(this, 1)">Ivory White</button>
+        <button class="variant-btn" onclick="selectVariant(this, 2)">Pampas Natural</button>
+        <button class="variant-btn" onclick="selectVariant(this, 3)">Classic Arch</button>
+      </div>
+    </div>
+
+    <div class="product-divider"></div>
+
+    <!-- Quantity -->
+    <div>
+      <div class="qty-label">Quantity</div>
+      <div class="qty-wrap">
+        <button class="qty-btn" onclick="changeQty(-1)">−</button>
+        <div class="qty-display" id="qtyDisplay">1</div>
+        <button class="qty-btn" onclick="changeQty(1)">+</button>
+      </div>
+    </div>
+
+    <div class="product-divider"></div>
+
+    <!--
+    SETUP OPTION — SAVED FOR LATER
+    <div>
+      <div class="variant-label">Setup Option</div>
+      <div class="variants">
+        <button class="variant-btn selected" onclick="selectSetup(this, 'self')">Self Setup</button>
+        <button class="variant-btn" onclick="selectSetup(this, 'professional')">Professional Setup</button>
+      </div>
+      <div id="setup-note" style="margin-top:10px;font-size:0.65rem;letter-spacing:0.1em;color:var(--text-soft);line-height:1.8;"></div>
+    </div>
+    -->
+
+    <!-- Rental dates -->
+    <div>
+      <div class="variant-label">Rental Period</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px;">
+        <div>
+          <div style="font-size:0.6rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-soft);margin-bottom:6px;">Needed By</div>
+          <div class="date-field" id="pickup-field" onclick="openPicker('pickup')">
+            <span id="pickup-display">Select date &amp; time</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:0.6rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-soft);margin-bottom:6px;">Return By</div>
+          <div class="date-field" id="return-field" onclick="openPicker('return')">
+            <span id="return-display">Select date &amp; time</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div>
+        </div>
+      </div>
+      <div id="rental-duration" style="font-size:0.65rem;letter-spacing:0.1em;color:var(--text-soft);min-height:18px;"></div>
+    </div>
+
+    <!-- Custom date/time picker popup -->
+    <div id="picker-overlay" onclick="closePicker()" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(58,46,40,0.3);"></div>
+    <div id="picker-popup" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:600;background:white;border-radius:16px;padding:24px;box-shadow:0 12px 48px rgba(58,46,40,0.18);width:320px;max-width:92vw;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <span id="picker-title" style="font-size:0.65rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--text-soft);"></span>
+        <button onclick="closePicker()" style="background:none;border:none;cursor:pointer;font-size:1.2rem;color:var(--text-soft);line-height:1;">✕</button>
+      </div>
+
+      <!-- Month nav -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <button onclick="changeMonth(-1)" style="background:none;border:none;cursor:pointer;font-size:1.1rem;color:var(--text-mid);padding:4px 10px;">‹</button>
+        <span id="cal-month-label" style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:300;color:var(--text-dark);"></span>
+        <button onclick="changeMonth(1)" style="background:none;border:none;cursor:pointer;font-size:1.1rem;color:var(--text-mid);padding:4px 10px;">›</button>
+      </div>
+
+      <!-- Day labels -->
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px;">
+        <div style="text-align:center;font-size:0.58rem;letter-spacing:0.1em;color:var(--text-soft);padding:4px 0;">Su</div>
+        <div style="text-align:center;font-size:0.58rem;letter-spacing:0.1em;color:var(--text-soft);padding:4px 0;">Mo</div>
+        <div style="text-align:center;font-size:0.58rem;letter-spacing:0.1em;color:var(--text-soft);padding:4px 0;">Tu</div>
+        <div style="text-align:center;font-size:0.58rem;letter-spacing:0.1em;color:var(--text-soft);padding:4px 0;">We</div>
+        <div style="text-align:center;font-size:0.58rem;letter-spacing:0.1em;color:var(--text-soft);padding:4px 0;">Th</div>
+        <div style="text-align:center;font-size:0.58rem;letter-spacing:0.1em;color:var(--text-soft);padding:4px 0;">Fr</div>
+        <div style="text-align:center;font-size:0.58rem;letter-spacing:0.1em;color:var(--text-soft);padding:4px 0;">Sa</div>
+      </div>
+
+      <!-- Calendar grid -->
+      <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:16px;"></div>
+
+      <!-- Time selector -->
+      <div style="border-top:1px solid rgba(201,180,154,0.25);padding-top:14px;">
+        <div style="font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-soft);margin-bottom:10px;">Time</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <select id="picker-hour" style="flex:1;padding:8px 10px;border:1px solid rgba(201,180,154,0.5);border-radius:8px;font-family:'Jost',sans-serif;font-size:0.78rem;color:var(--text-dark);background:white;cursor:pointer;"></select>
+          <span style="color:var(--text-soft);font-size:1rem;">:</span>
+          <select id="picker-min" style="flex:1;padding:8px 10px;border:1px solid rgba(201,180,154,0.5);border-radius:8px;font-family:'Jost',sans-serif;font-size:0.78rem;color:var(--text-dark);background:white;cursor:pointer;">
+            <option value="00">00</option>
+            <option value="15">15</option>
+            <option value="30">30</option>
+            <option value="45">45</option>
+          </select>
+          <select id="picker-ampm" style="flex:1;padding:8px 10px;border:1px solid rgba(201,180,154,0.5);border-radius:8px;font-family:'Jost',sans-serif;font-size:0.78rem;color:var(--text-dark);background:white;cursor:pointer;">
+            <option>AM</option>
+            <option>PM</option>
+          </select>
+        </div>
+      </div>
+
+      <button onclick="confirmPicker()" style="width:100%;margin-top:16px;padding:13px;background:var(--text-dark);color:white;border:none;border-radius:10px;font-family:'Jost',sans-serif;font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;cursor:pointer;">Confirm</button>
+    </div>
+
+    <!-- Add to cart -->
+    <button class="add-to-cart-btn" onclick="addToCart()">Add to Cart</button>
+
+    <!-- Go to cart -->
+    <a href="cart.html" style="display:block;width:100%;padding:16px;text-align:center;border:1px solid rgba(201,180,154,0.6);border-radius:10px;font-family:'Jost',sans-serif;font-size:0.72rem;font-weight:300;letter-spacing:0.22em;text-transform:uppercase;color:var(--text-mid);text-decoration:none;transition:all 0.25s;" onmouseover="this.style.background='rgba(201,180,154,0.12)';this.style.color='var(--text-dark)'" onmouseout="this.style.background='';this.style.color='var(--text-mid)'">Go to Cart</a>
+  </div>
+
+</div>
+
+<!-- ── YOU MAY ALSO LIKE ── -->
+<section class="also-like">
+  <div class="also-like-header">
+    <div class="also-like-eyebrow">Keep Exploring</div>
+    <div class="also-like-title">You May Also Like</div>
+    <div class="also-like-line"></div>
+  </div>
+  <div class="also-like-grid">
+
+    <a href="product.html" class="also-card">
+      <div class="also-card-img">
+        <svg viewBox="0 0 400 530" xmlns="http://www.w3.org/2000/svg">
+          <rect width="400" height="530" fill="#ede0d0"/>
+          <ellipse cx="200" cy="265" rx="130" ry="180" stroke="rgba(165,140,118,0.3)" stroke-width="1.5" fill="rgba(255,255,255,0.08)"/>
+        </svg>
+      </div>
+      <div class="also-card-info">
+        <div class="also-card-name">Natural Linen Weave</div>
+        <div class="also-card-price">From $65 / day</div>
+      </div>
+    </a>
+
+    <a href="product.html" class="also-card">
+      <div class="also-card-img">
+        <svg viewBox="0 0 400 530" xmlns="http://www.w3.org/2000/svg">
+          <rect width="400" height="530" fill="#f8f0e8"/>
+          <path d="M60 530 L60 200 Q60 30 200 30 Q340 30 340 200 L340 530" stroke="rgba(188,162,138,0.4)" stroke-width="2" fill="rgba(255,255,255,0.18)"/>
+          <ellipse cx="100" cy="88" rx="7" ry="22" fill="rgba(215,198,175,0.7)" transform="rotate(-18 100 88)"/>
+          <ellipse cx="200" cy="68" rx="7" ry="25" fill="rgba(220,204,180,0.72)"/>
+        </svg>
+      </div>
+      <div class="also-card-info">
+        <div class="also-card-name">Pampas Grass Arch</div>
+        <div class="also-card-price">From $95 / day</div>
+      </div>
+    </a>
+
+    <a href="product.html" class="also-card">
+      <div class="also-card-img">
+        <svg viewBox="0 0 400 530" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="alg3" x1="0.2" y1="0" x2="0.8" y2="1"><stop offset="0%" stop-color="#faf5ee"/><stop offset="100%" stop-color="#e4d8cc"/></linearGradient></defs>
+          <rect width="400" height="530" fill="url(#alg3)"/>
+          <path d="M160 0 Q200 28 240 0" stroke="rgba(180,155,130,0.4)" stroke-width="2" fill="none"/>
+        </svg>
+      </div>
+      <div class="also-card-info">
+        <div class="also-card-name">Ivory Silk Drape</div>
+        <div class="also-card-price">From $75 / day</div>
+      </div>
+    </a>
+
+    <a href="product.html" class="also-card">
+      <div class="also-card-img">
+        <svg viewBox="0 0 400 530" xmlns="http://www.w3.org/2000/svg">
+          <defs><radialGradient id="alg4" cx="40%" cy="35%" r="75%"><stop offset="0%" stop-color="#e8cdb8"/><stop offset="100%" stop-color="#c8a282"/></radialGradient></defs>
+          <rect width="400" height="530" fill="url(#alg4)"/>
+          <path d="M130 530 L130 310 Q130 210 200 210 Q270 210 270 310 L270 530" stroke="rgba(255,255,255,0.22)" stroke-width="1.5" fill="none"/>
+        </svg>
+      </div>
+      <div class="also-card-info">
+        <div class="also-card-name">Terracotta Plaster</div>
+        <div class="also-card-price">From $70 / day</div>
+      </div>
+    </a>
+
+  </div>
+</section>
+
+<script>
+  // ── Image gallery data (swap SVG innerHTML or img src per variant/index)
+  const images = [
+    // index 0 — Blush Pink
+    `<svg viewBox="0 0 400 530" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="gi1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f0e4d8"/><stop offset="100%" stop-color="#e8d4c4"/></linearGradient></defs><rect width="400" height="530" fill="url(#gi1)"/><path d="M80 530 L80 220 Q80 60 200 60 Q320 60 320 220 L320 530" stroke="rgba(180,150,130,0.35)" stroke-width="1.5" fill="rgba(255,255,255,0.15)"/><circle cx="200" cy="72" r="32" fill="rgba(232,207,194,0.6)"/><circle cx="200" cy="72" r="12" fill="rgba(210,175,158,0.75)"/><text x="200" y="380" text-anchor="middle" font-family="Jost,sans-serif" font-size="13" fill="rgba(160,140,125,0.6)" letter-spacing="3">BLUSH PINK</text></svg>`,
+    // index 1 — Ivory White
+    `<svg viewBox="0 0 400 530" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="530" fill="#ede0d0"/><ellipse cx="200" cy="265" rx="130" ry="180" stroke="rgba(165,140,118,0.3)" stroke-width="1.5" fill="rgba(255,255,255,0.08)"/><text x="200" y="380" text-anchor="middle" font-family="Jost,sans-serif" font-size="13" fill="rgba(160,140,125,0.6)" letter-spacing="3">IVORY WHITE</text></svg>`,
+    // index 2 — Pampas Natural
+    `<svg viewBox="0 0 400 530" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="530" fill="#f8f0e8"/><path d="M60 530 L60 200 Q60 30 200 30 Q340 30 340 200 L340 530" stroke="rgba(188,162,138,0.4)" stroke-width="2" fill="rgba(255,255,255,0.18)"/><ellipse cx="200" cy="68" rx="7" ry="25" fill="rgba(220,204,180,0.72)"/><text x="200" y="380" text-anchor="middle" font-family="Jost,sans-serif" font-size="13" fill="rgba(160,140,125,0.6)" letter-spacing="3">PAMPAS NATURAL</text></svg>`,
+    // index 3 — Classic Arch
+    `<svg viewBox="0 0 400 530" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="gi4" x1="0.2" y1="0" x2="0.8" y2="1"><stop offset="0%" stop-color="#faf5ee"/><stop offset="100%" stop-color="#e4d8cc"/></linearGradient></defs><rect width="400" height="530" fill="url(#gi4)"/><path d="M80 530 L80 220 Q80 60 200 60 Q320 60 320 220 L320 530" stroke="rgba(165,140,118,0.35)" stroke-width="2" fill="rgba(255,255,255,0.12)"/><text x="200" y="380" text-anchor="middle" font-family="Jost,sans-serif" font-size="13" fill="rgba(160,140,125,0.6)" letter-spacing="3">CLASSIC ARCH</text></svg>`
+  ];
+
+  const prices = ['$85', '$90', '$95', '$80'];
+  let currentIndex = 0;
+
+  function setMainImage(idx) {
+    currentIndex = idx;
+    document.getElementById('mainImageContent').innerHTML = images[idx];
+    // update thumbnails
+    document.querySelectorAll('.thumb').forEach((t, i) => {
+      t.classList.toggle('active', i === idx);
+    });
+  }
+
+  function selectImage(idx) { setMainImage(idx); }
+
+  function prevImage() {
+    setMainImage((currentIndex - 1 + images.length) % images.length);
+  }
+  function nextImage() {
+    setMainImage((currentIndex + 1) % images.length);
+  }
+
+  function selectVariant(btn, idx) {
+    document.querySelectorAll('.variant-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    setMainImage(idx);
+    document.getElementById('productPrice').innerHTML = prices[idx] + ' <span>per day</span>';
+  }
+
+  // ── Quantity (max 5)
+  let qty = 1;
+  function changeQty(delta) {
+    qty = Math.min(5, Math.max(1, qty + delta));
+    document.getElementById('qtyDisplay').textContent = qty;
+  }
+
+  /* SETUP OPTION — SAVED FOR LATER
+  function selectSetup(btn, type) { ... }
+  */
+
+  // ── Calendar state
+  const now = new Date();
+  let activePicker = null;   // 'pickup' or 'return'
+  let calYear  = now.getFullYear();
+  let calMonth = now.getMonth();
+  let selectedDay = null;
+
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  // Build hour options
+  document.addEventListener('DOMContentLoaded', function() {
+    const h = document.getElementById('picker-hour');
+    // 7 AM to 9 PM only (7,8,9,10,11,12,1,2,3,4,5,6,7,8,9)
+    const hours = [7,8,9,10,11,12,1,2,3,4,5,6,7,8,9];
+    const ampms = ['AM','AM','AM','AM','AM','PM','PM','PM','PM','PM','PM','PM','PM','PM','PM'];
+    // Build unique hour+ampm combos
+    const slots = [
+      {v:'07',a:'AM'},{v:'08',a:'AM'},{v:'09',a:'AM'},{v:'10',a:'AM'},{v:'11',a:'AM'},
+      {v:'12',a:'PM'},{v:'01',a:'PM'},{v:'02',a:'PM'},{v:'03',a:'PM'},{v:'04',a:'PM'},
+      {v:'05',a:'PM'},{v:'06',a:'PM'},{v:'07',a:'PM'},{v:'08',a:'PM'},{v:'09',a:'PM'}
+    ];
+    slots.forEach(s => {
+      const o = document.createElement('option');
+      o.value = s.v + '|' + s.a;
+      o.textContent = `${parseInt(s.v)} ${s.a}`;
+      h.appendChild(o);
+    });
+    // Hide the separate AM/PM selector since it's baked in
+    document.getElementById('picker-ampm').style.display = 'none';
+    h.value = '09|AM';
+  });
+
+  function openPicker(type) {
+    activePicker = type;
+    calYear  = now.getFullYear();
+    calMonth = now.getMonth();
+    selectedDay = null;
+    document.getElementById('picker-title').textContent = type === 'pickup' ? 'Needed By' : 'Return By';
+    document.getElementById('picker-overlay').style.display = 'block';
+    document.getElementById('picker-popup').style.display  = 'block';
+    renderCalendar();
+  }
+
+  function closePicker() {
+    document.getElementById('picker-overlay').style.display = 'none';
+    document.getElementById('picker-popup').style.display  = 'none';
+    activePicker = null;
+  }
+
+  function changeMonth(delta) {
+    calMonth += delta;
+    if (calMonth > 11) { calMonth = 0; calYear++; }
+    if (calMonth < 0)  { calMonth = 11; calYear--; }
+    renderCalendar();
+  }
+
+  function renderCalendar() {
+    document.getElementById('cal-month-label').textContent = `${MONTHS[calMonth]} ${calYear}`;
+    const grid = document.getElementById('cal-grid');
+    grid.innerHTML = '';
+
+    const firstDay = new Date(calYear, calMonth, 1).getDay();
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    const todayDate = now.getDate();
+    const todayMonth = now.getMonth();
+    const todayYear = now.getFullYear();
+
+    // Empty cells
+    for (let i = 0; i < firstDay; i++) {
+      const empty = document.createElement('div');
+      empty.className = 'cal-day empty';
+      grid.appendChild(empty);
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const cell = document.createElement('div');
+      cell.className = 'cal-day';
+      cell.textContent = d;
+
+      const isPast = (calYear < todayYear) ||
+        (calYear === todayYear && calMonth < todayMonth) ||
+        (calYear === todayYear && calMonth === todayMonth && d < todayDate);
+
+      // For return picker, also block before pickup date
+      if (activePicker === 'return' && pickupDate) {
+        const pd = new Date(pickupDate.y, pickupDate.m, pickupDate.d);
+        const cd = new Date(calYear, calMonth, d);
+        if (cd < pd) { cell.classList.add('disabled'); grid.appendChild(cell); continue; }
+      }
+
+      if (isPast) {
+        cell.classList.add('disabled');
+      } else {
+        if (calYear === todayYear && calMonth === todayMonth && d === todayDate) cell.classList.add('today');
+        if (selectedDay && selectedDay.d === d && selectedDay.m === calMonth && selectedDay.y === calYear) cell.classList.add('selected');
+        cell.onclick = () => selectDay(d);
+      }
+      grid.appendChild(cell);
+    }
+  }
+
+  function selectDay(d) {
+    selectedDay = { d, m: calMonth, y: calYear };
+    renderCalendar();
+  }
+
+  // Stored selections
+  let pickupDate = null;
+  let returnDate = null;
+
+  function confirmPicker() {
+    if (!selectedDay) { alert('Please select a date.'); return; }
+    const hourVal = document.getElementById('picker-hour').value;
+    const [h, ampm] = hourVal.split('|');
+    const min  = document.getElementById('picker-min').value;
+    const dateStr = `${MONTHS[selectedDay.m]} ${selectedDay.d}, ${selectedDay.y}`;
+    const timeStr = `${parseInt(h)}:${min} ${ampm}`;
+    const display = `${dateStr} at ${timeStr}`;
+
+    if (activePicker === 'pickup') {
+      pickupDate = { ...selectedDay };
+      document.getElementById('pickup-display').textContent = display;
+      document.getElementById('pickup-field').classList.add('filled');
+    } else {
+      returnDate = { ...selectedDay };
+      document.getElementById('return-display').textContent = display;
+      document.getElementById('return-field').classList.add('filled');
+    }
+
+    updateDuration();
+    closePicker();
+  }
+
+  function updateDuration() {
+    const dur = document.getElementById('rental-duration');
+    if (pickupDate && returnDate) {
+      const d1 = new Date(pickupDate.y, pickupDate.m, pickupDate.d);
+      const d2 = new Date(returnDate.y, returnDate.m, returnDate.d);
+      const diff = Math.round((d2 - d1) / (1000*60*60*24));
+      if (diff < 0) {
+        dur.textContent = 'Return date must be after pickup date.';
+        dur.style.color = '#c9705a';
+      } else if (diff === 0) {
+        dur.textContent = 'Same-day rental';
+        dur.style.color = 'var(--text-soft)';
+      } else {
+        dur.textContent = `Rental duration: ${diff} day${diff > 1 ? 's' : ''}`;
+        dur.style.color = 'var(--text-soft)';
+      }
+    } else {
+      dur.textContent = '';
+    }
+  }
+
+  function addToCart() {
+    const btn = document.querySelector('.add-to-cart-btn');
+    btn.textContent = '✓ Added to Cart';
+    btn.style.background = '#7a6a60';
+    setTimeout(() => {
+      btn.textContent = 'Add to Cart';
+      btn.style.background = '';
+    }, 2000);
+  }
+</script>
+
+</body>
+</html>

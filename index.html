@@ -35,20 +35,12 @@
 
     /* ─── NAV ─────────────────────────────────────────────── */
     nav {
-      position: absolute; top: 0; left: 0; right: 0; z-index: 100;
+      position: absolute; top: 0; left: 0; right: 0; z-index: 200;
       display: flex; align-items: center; justify-content: flex-end;
-      padding: 22px 28px;
-    }
-    .nav-hamburger {
-      display: flex; flex-direction: column; gap: 5px; cursor: pointer; padding: 4px;
-    }
-    .nav-hamburger span {
-      display: block; width: 22px; height: 1.5px;
-      background: rgba(255,255,255,0.85);
-      border-radius: 2px;
+      padding: 20px 28px;
     }
     .nav-cart {
-      color: rgba(255,255,255,0.85);
+      color: rgba(255,255,255,0.9);
       cursor: pointer;
       padding: 4px;
     }
@@ -378,7 +370,7 @@
 <!-- ═══════════════════════  NAV  ═══════════════════════ -->
 <nav>
   <div class="nav-cart" aria-label="Cart">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
       <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
       <line x1="3" y1="6" x2="21" y2="6"/>
       <path d="M16 10a4 4 0 01-8 0"/>
@@ -408,7 +400,7 @@
 <section class="categories" id="backdrops">
 
   <!-- Backdrops — arch icon -->
-  <a class="cat-btn" href="#">
+  <a class="cat-btn" href="#section-backdrops" onclick="scrollToSection('section-backdrops')">
     <span class="cat-icon">
       <svg width="38" height="46" viewBox="0 0 38 46" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M5 46 L5 19 Q5 2 19 2 Q33 2 33 19 L33 46" stroke="#c0a48a" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
@@ -418,13 +410,13 @@
   </a>
 
   <!-- Numbers & Letters — "1 2 3" text -->
-  <a class="cat-btn" href="#">
+  <a class="cat-btn" href="#section-numbers" onclick="scrollToSection('section-numbers')">
     <span class="cat-icon" style="font-family:'Cormorant Garamond',serif;font-size:1.55rem;color:#b8987e;font-weight:300;letter-spacing:0.14em;line-height:1;">1 2 3</span>
     <span class="cat-label">Numbers &amp; Letters</span>
   </a>
 
   <!-- Neon Signs — heart outline -->
-  <a class="cat-btn" href="#">
+  <a class="cat-btn" href="#section-neon" onclick="scrollToSection('section-neon')">
     <span class="cat-icon">
       <svg width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M19 30 C19 30 3 20 3 10 C3 5.5 6.5 2 11 2 C14.2 2 17 3.9 19 6.5 C21 3.9 23.8 2 27 2 C31.5 2 35 5.5 35 10 C35 20 19 30 19 30Z"
@@ -448,7 +440,7 @@
 <section class="product-grid">
 
   <!-- Card 1 — Blush Floral Arch -->
-  <div class="product-card">
+  <div class="product-card" id="section-backdrops" onclick="window.location='product.html'" style="cursor:pointer;">
     <div class="product-svg-wrap">
       <svg viewBox="0 0 400 530" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -498,7 +490,7 @@
         <rect x="80" y="220" width="240" height="310" fill="rgba(255,255,255,0.12)" rx="2"/>
       </svg>
     </div>
-    <div class="rent-overlay"><a href="#" class="rent-btn">Rent Now</a></div>
+    <div class="rent-overlay"><a href="product.html" class="rent-btn">Add to Cart</a></div>
     <div class="product-info">
       <div class="product-name">Blush Floral Arch Panel</div>
       <div class="product-price">From $85 / day</div>
@@ -506,7 +498,7 @@
   </div>
 
   <!-- Card 2 — Linen Textured Panel -->
-  <div class="product-card">
+  <div class="product-card" onclick="window.location='product.html'" style="cursor:pointer;">
     <div class="product-svg-wrap">
       <svg viewBox="0 0 400 530" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -558,7 +550,7 @@
         <ellipse cx="200" cy="400" rx="16" ry="28" fill="rgba(188,165,145,0.18)" transform="rotate(-8 200 400)"/>
       </svg>
     </div>
-    <div class="rent-overlay"><a href="#" class="rent-btn">Rent Now</a></div>
+    <div class="rent-overlay"><a href="product.html" class="rent-btn">Add to Cart</a></div>
     <div class="product-info">
       <div class="product-name">Natural Linen Weave</div>
       <div class="product-price">From $65 / day</div>
@@ -566,7 +558,7 @@
   </div>
 
   <!-- Card 3 — Dried Pampas Arch -->
-  <div class="product-card">
+  <div class="product-card" id="section-numbers" onclick="window.location='product.html'" style="cursor:pointer;">
     <div class="product-svg-wrap">
       <svg viewBox="0 0 400 530" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -614,7 +606,7 @@
         <rect x="60" y="200" width="280" height="330" fill="rgba(255,255,255,0.1)" rx="2"/>
       </svg>
     </div>
-    <div class="rent-overlay"><a href="#" class="rent-btn">Rent Now</a></div>
+    <div class="rent-overlay"><a href="product.html" class="rent-btn">Add to Cart</a></div>
     <div class="product-info">
       <div class="product-name">Pampas Grass Arch</div>
       <div class="product-price">From $95 / day</div>
@@ -622,7 +614,7 @@
   </div>
 
   <!-- Card 4 — Ivory Silk Drape -->
-  <div class="product-card">
+  <div class="product-card" onclick="window.location='product.html'" style="cursor:pointer;">
     <div class="product-svg-wrap">
       <svg viewBox="0 0 400 530" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -658,7 +650,7 @@
         <circle cx="200" cy="22" r="6" fill="rgba(196,168,148,0.55)"/>
       </svg>
     </div>
-    <div class="rent-overlay"><a href="#" class="rent-btn">Rent Now</a></div>
+    <div class="rent-overlay"><a href="product.html" class="rent-btn">Add to Cart</a></div>
     <div class="product-info">
       <div class="product-name">Ivory Silk Drape Panel</div>
       <div class="product-price">From $75 / day</div>
@@ -666,7 +658,7 @@
   </div>
 
   <!-- Card 5 — Rose Garden Backdrop -->
-  <div class="product-card">
+  <div class="product-card" id="section-neon" onclick="window.location='product.html'" style="cursor:pointer;">
     <div class="product-svg-wrap">
       <svg viewBox="0 0 400 530" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -733,7 +725,7 @@
         <rect width="400" height="530" fill="rgba(255,252,248,0.12)"/>
       </svg>
     </div>
-    <div class="rent-overlay"><a href="#" class="rent-btn">Rent Now</a></div>
+    <div class="rent-overlay"><a href="product.html" class="rent-btn">Add to Cart</a></div>
     <div class="product-info">
       <div class="product-name">Garden Rose Full Panel</div>
       <div class="product-price">From $110 / day</div>
@@ -741,7 +733,7 @@
   </div>
 
   <!-- Card 6 — Terracotta Wash -->
-  <div class="product-card">
+  <div class="product-card" onclick="window.location='product.html'" style="cursor:pointer;">
     <div class="product-svg-wrap">
       <svg viewBox="0 0 400 530" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -771,7 +763,7 @@
         <ellipse cx="320" cy="275" rx="15" ry="28" fill="rgba(255,244,232,0.14)" transform="rotate(18 320 275)"/>
       </svg>
     </div>
-    <div class="rent-overlay"><a href="#" class="rent-btn">Rent Now</a></div>
+    <div class="rent-overlay"><a href="product.html" class="rent-btn">Add to Cart</a></div>
     <div class="product-info">
       <div class="product-name">Terracotta Plaster Wash</div>
       <div class="product-price">From $70 / day</div>
@@ -822,6 +814,15 @@
   </ul>
   <p class="footer-copy">© 2025 The Backdrop Bar · Bay Area, California · All rights reserved</p>
 </footer>
+
+<script>
+  function scrollToSection(id) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+</script>
 
 </body>
 </html>

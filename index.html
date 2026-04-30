@@ -154,7 +154,40 @@
       text-align: center;
     }
 
-    /* ─── SECTION HEADER ─────────────────────────────────── */
+    .back-to-top {
+      grid-column: 1 / -1;
+      display: flex; justify-content: center;
+      padding: 20px 0 10px;
+    }
+    .back-to-top a {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--text-soft); text-decoration: none;
+      transition: color 0.2s;
+    }
+    .back-to-top a:hover { color: var(--text-dark); }
+    .back-to-top svg { width: 12px; height: 12px; stroke: currentColor; }
+
+    .category-label {
+      grid-column: 1 / -1;
+      padding: 18px 4px 6px;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.2rem;
+      font-weight: 300;
+      letter-spacing: 0.08em;
+      color: var(--text-dark);
+      border-bottom: 1px solid rgba(201,180,154,0.3);
+      margin-bottom: 4px;
+    }
+    .category-label span {
+      font-family: 'Jost', sans-serif;
+      font-size: 0.58rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+      margin-left: 10px;
+      font-weight: 300;
+    }
     .section-header {
       text-align: center;
       padding: 32px 40px 12px;
@@ -439,8 +472,10 @@
 <!-- ═══════════════════  PRODUCT GRID  ══════════════════ -->
 <section class="product-grid">
 
+  <div class="category-label" id="section-backdrops">Backdrops <span>Collection</span></div>
+
   <!-- Card 1 — Blush Floral Arch -->
-  <div class="product-card" id="section-backdrops" onclick="window.location='product.html'" style="cursor:pointer;">
+  <div class="product-card" onclick="window.location='product.html'" style="cursor:pointer;">
     <div class="product-svg-wrap">
       <svg viewBox="0 0 400 530" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -557,8 +592,17 @@
     </div>
   </div>
 
+  <div class="back-to-top">
+    <a href="#backdrops" onclick="scrollToSection('backdrops');return false;">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+      Back to Selections
+    </a>
+  </div>
+
+  <div class="category-label" id="section-numbers">Numbers &amp; Letters <span>Collection</span></div>
+
   <!-- Card 3 — Dried Pampas Arch -->
-  <div class="product-card" id="section-numbers" onclick="window.location='product.html'" style="cursor:pointer;">
+  <div class="product-card" onclick="window.location='product.html'" style="cursor:pointer;">
     <div class="product-svg-wrap">
       <svg viewBox="0 0 400 530" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -657,8 +701,17 @@
     </div>
   </div>
 
+  <div class="back-to-top">
+    <a href="#backdrops" onclick="scrollToSection('backdrops');return false;">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+      Back to Selections
+    </a>
+  </div>
+
+  <div class="category-label" id="section-neon">Neon Signs <span>Collection</span></div>
+
   <!-- Card 5 — Rose Garden Backdrop -->
-  <div class="product-card" id="section-neon" onclick="window.location='product.html'" style="cursor:pointer;">
+  <div class="product-card" onclick="window.location='product.html'" style="cursor:pointer;">
     <div class="product-svg-wrap">
       <svg viewBox="0 0 400 530" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -768,6 +821,13 @@
       <div class="product-name">Terracotta Plaster Wash</div>
       <div class="product-price">From $70 / day</div>
     </div>
+  </div>
+
+  <div class="back-to-top">
+    <a href="#backdrops" onclick="scrollToSection('backdrops');return false;">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+      Back to Selections
+    </a>
   </div>
 
 </section>

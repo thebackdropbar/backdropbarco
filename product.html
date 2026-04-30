@@ -779,6 +779,26 @@
   }
 
   function addToCart() {
+    // Gather all selected options
+    const title    = document.getElementById('productTitle').textContent;
+    const priceStr = document.getElementById('productPrice').textContent.trim().split(' ')[0]; // e.g. "$85"
+    const price    = parseFloat(priceStr.replace('$',''));
+    const variantBtn = document.querySelector('.variant-btn.selected');
+    const variant  = variantBtn ? variantBtn.textContent : '';
+    const pickup   = document.getElementById('pickup-display').textContent;
+    const ret      = document.getElementById('return-display').textContent;
+    const duration = document.getElementById('rental-duration').textContent;
+
+    // Get current image SVG as data URI for cart thumbnail
+    const imgHTML  = document.getElementById('mainImageContent').innerHTML;
+
+    const item = { title, price, variant, qty, pickup, ret, duration, imgHTML, id: Date.now() };
+
+    // Load existing cart, add item, save back
+    let cart = JSON.parse(localStorage.getItem('tbb_cart') || '[]');
+    cart.push(item);
+    localStorage.setItem('tbb_cart', JSON.stringify(cart));
+
     const btn = document.querySelector('.add-to-cart-btn');
     btn.textContent = '✓ Added to Cart';
     btn.style.background = '#7a6a60';

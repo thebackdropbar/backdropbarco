@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cart — The Backdrop Bar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:wght@300;400&family=Jost:wght@200;300;400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --cream: #fdf8f3; --parchment: #f5ede1; --blush: #e8cfc2; --rose: #d4a89a;
+      --warm-tan: #c9b49a; --text-dark: #3a2e28; --text-mid: #7a6a60; --text-soft: #a99589;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--cream); color: var(--text-dark); font-family: 'Jost', sans-serif; font-weight: 300; min-height: 100vh; }
+
+    /* ── NAV ── */
+    .top-nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 40px;
+      background: var(--cream);
+      border-bottom: 1px solid rgba(201,180,154,0.25);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .top-nav-logo {
+      font-family: 'Great Vibes', cursive;
+      font-size: 1.6rem; color: var(--text-dark); text-decoration: none;
+    }
+    .top-nav-back {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--text-soft); text-decoration: none; transition: color 0.2s;
+    }
+    .top-nav-back:hover { color: var(--text-dark); }
+    .top-nav-back svg { width: 14px; height: 14px; }
+
+    /* ── PAGE LAYOUT ── */
+    .cart-page {
+      max-width: 960px; margin: 0 auto;
+      padding: 48px 24px 80px;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 40px;
+      align-items: start;
+    }
+
+    /* ── PAGE TITLE ── */
+    .cart-title-wrap { grid-column: 1 / -1; margin-bottom: 8px; }
+    .cart-eyebrow {
+      font-size: 0.62rem; letter-spacing: 0.28em;
+      text-transform: uppercase; color: var(--text-soft); margin-bottom: 8px;
+    }
+    .cart-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem; font-weight: 300; color: var(--text-dark);
+    }
+    .cart-divider {
+      height: 1px; background: rgba(201,180,154,0.25); margin-top: 16px;
+    }
+
+    /* ── EMPTY STATE ── */
+    .cart-empty {
+      grid-column: 1 / -1;
+      text-align: center; padding: 80px 24px;
+      color: var(--text-soft);
+    }
+    .cart-empty svg { width: 48px; height: 48px; stroke: var(--blush); margin-bottom: 20px; }
+    .cart-empty h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem; font-weight: 300; color: var(--text-mid); margin-bottom: 10px;
+    }
+    .cart-empty p { font-size: 0.75rem; letter-spacing: 0.1em; margin-bottom: 28px; }
+    .cart-empty a {
+      display: inline-block; padding: 13px 32px;
+      background: var(--text-dark); color: white;
+      border-radius: 8px; text-decoration: none;
+      font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase;
+      transition: background 0.25s;
+    }
+    .cart-empty a:hover { background: var(--text-mid); }
+
+    /* ── CART ITEMS ── */
+    .cart-items { display: flex; flex-direction: column; gap: 16px; }
+
+    .cart-item {
+      display: grid;
+      grid-template-columns: 100px 1fr auto;
+      gap: 18px;
+      align-items: start;
+      background: white;
+      border: 1px solid rgba(201,180,154,0.25);
+      border-radius: 14px;
+      padding: 20px;
+    }
+
+    .cart-item-img {
+      width: 100px; height: 130px;
+      border-radius: 8px; overflow: hidden;
+      background: var(--parchment); flex-shrink: 0;
+    }
+    .cart-item-img svg { width: 100%; height: 100%; display: block; }
+
+    .cart-item-details { display: flex; flex-direction: column; gap: 8px; justify-content: space-between; }
+
+    .cart-item-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.2rem; font-weight: 400; color: var(--text-dark);
+    }
+    .cart-item-variant {
+      font-size: 0.72rem; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--text-soft);
+    }
+    .cart-item-dates {
+      display: flex; flex-direction: column; gap: 5px;
+      margin-top: 4px;
+    }
+    .cart-item-date-row {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 0.76rem; color: var(--text-mid);
+    }
+    .cart-item-date-row svg { width: 13px; height: 13px; stroke: var(--warm-tan); flex-shrink: 0; }
+    .cart-item-duration {
+      font-size: 0.68rem; letter-spacing: 0.1em;
+      color: var(--text-soft); margin-top: 4px;
+    }
+    .cart-item-price {
+      font-size: 1.05rem; font-weight: 300;
+      color: var(--text-dark); margin-top: 6px;
+    }
+
+    .cart-item-right {
+      display: flex; flex-direction: column;
+      align-items: flex-end; gap: 12px;
+    }
+
+    /* Qty control */
+    .cart-qty {
+      display: flex; align-items: center; gap: 0;
+      border: 1px solid rgba(201,180,154,0.45);
+      border-radius: 8px; overflow: hidden;
+    }
+    .cart-qty-btn {
+      width: 32px; height: 32px;
+      background: none; border: none;
+      font-size: 1rem; color: var(--text-mid);
+      cursor: pointer; transition: background 0.15s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .cart-qty-btn:hover { background: rgba(201,180,154,0.12); }
+    .cart-qty-num {
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; color: var(--text-dark);
+      border-left: 1px solid rgba(201,180,154,0.35);
+      border-right: 1px solid rgba(201,180,154,0.35);
+    }
+
+    /* Remove button */
+    .cart-remove {
+      font-size: 0.58rem; letter-spacing: 0.1em;
+      color: var(--text-soft);
+      background: none; border: none; cursor: pointer;
+      transition: color 0.2s; padding: 4px;
+      width: 96px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .cart-remove:hover { color: #b05a5a; }
+
+    .cart-item-subtotal {
+      font-size: 0.9rem; font-weight: 300; color: var(--text-dark);
+      text-align: right;
+    }
+    .cart-item-subtotal span {
+      display: block; font-size: 0.58rem;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--text-soft); margin-bottom: 2px;
+    }
+
+    /* ── ORDER SUMMARY ── */
+    .order-summary {
+      background: white;
+      border: 1px solid rgba(201,180,154,0.25);
+      border-radius: 14px;
+      padding: 24px;
+      position: sticky; top: 80px;
+    }
+    .summary-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.15rem; font-weight: 300;
+      color: var(--text-dark); margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(201,180,154,0.2);
+    }
+    .summary-row {
+      display: flex; justify-content: space-between;
+      font-size: 0.72rem; letter-spacing: 0.08em;
+      color: var(--text-mid); padding: 7px 0;
+    }
+    .summary-row.total {
+      border-top: 1px solid rgba(201,180,154,0.25);
+      margin-top: 10px; padding-top: 14px;
+      font-size: 0.85rem; color: var(--text-dark);
+      font-weight: 300;
+    }
+    .summary-row.total strong { font-weight: 400; }
+
+    .checkout-btn {
+      width: 100%; margin-top: 20px;
+      padding: 16px;
+      background: var(--text-dark); color: white;
+      border: none; border-radius: 10px;
+      font-family: 'Jost', sans-serif;
+      font-size: 0.72rem; font-weight: 300;
+      letter-spacing: 0.22em; text-transform: uppercase;
+      cursor: pointer; text-decoration: none;
+      display: block; text-align: center;
+      transition: background 0.25s;
+    }
+    .checkout-btn:hover { background: var(--text-mid); }
+
+    .continue-btn {
+      width: 100%; margin-top: 10px;
+      padding: 13px;
+      background: none; color: var(--text-mid);
+      border: 1px solid rgba(201,180,154,0.5);
+      border-radius: 10px;
+      font-family: 'Jost', sans-serif;
+      font-size: 0.7rem; font-weight: 300;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      cursor: pointer; text-decoration: none;
+      display: block; text-align: center;
+      transition: all 0.25s;
+    }
+    .continue-btn:hover { background: rgba(201,180,154,0.1); color: var(--text-dark); }
+
+    .summary-note {
+      margin-top: 14px;
+      font-size: 0.6rem; letter-spacing: 0.08em;
+      color: var(--text-soft); line-height: 1.8; text-align: center;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .cart-page { grid-template-columns: 1fr; padding: 28px 16px 60px; gap: 28px; }
+      .order-summary { position: static; }
+      .top-nav { padding: 14px 20px; }
+      .cart-item { grid-template-columns: 72px 1fr auto; gap: 12px; padding: 14px; }
+      .cart-item-img { width: 72px; height: 88px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav class="top-nav">
+  <a href="index.html" class="top-nav-back">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M19 12H5M12 5l-7 7 7 7"/>
+    </svg>
+    Back
+  </a>
+  <a href="index.html" class="top-nav-logo">the backdrop bar</a>
+  <div style="width:60px;"></div>
+</nav>
+
+<!-- ── CART PAGE ── -->
+<div class="cart-page" id="cartPage">
+
+  <div class="cart-title-wrap">
+    <div class="cart-eyebrow">Your Selection</div>
+    <h1 class="cart-title">Cart</h1>
+    <div class="cart-divider"></div>
+  </div>
+
+  <!-- Items column -->
+  <div class="cart-items" id="cartItems"></div>
+
+  <!-- Summary column -->
+  <div class="order-summary" id="orderSummary">
+    <div class="summary-title">Order Summary</div>
+    <div id="summaryRows"></div>
+    <div class="summary-row total">
+      <strong>Total</strong>
+      <strong id="summaryTotal">$0</strong>
+    </div>
+    <a href="checkout.html" class="checkout-btn">Proceed to Checkout</a>
+    <a href="index.html" class="continue-btn">Continue Shopping</a>
+    <p class="summary-note">Prices shown per day · Final total calculated at checkout based on rental duration</p>
+  </div>
+
+</div>
+
+<script>
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  function loadCart() {
+    return JSON.parse(localStorage.getItem('tbb_cart') || '[]');
+  }
+  function saveCart(cart) {
+    localStorage.setItem('tbb_cart', JSON.stringify(cart));
+  }
+
+  function render() {
+    const cart = loadCart();
+    const itemsEl   = document.getElementById('cartItems');
+    const summaryEl = document.getElementById('summaryRows');
+    const totalEl   = document.getElementById('summaryTotal');
+    const pageEl    = document.getElementById('cartPage');
+
+    itemsEl.innerHTML = '';
+    summaryEl.innerHTML = '';
+
+    if (cart.length === 0) {
+      // Show empty state
+      pageEl.innerHTML = `
+        <div class="cart-empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <path d="M16 10a4 4 0 01-8 0"/>
+          </svg>
+          <h2>Your cart is empty</h2>
+          <p>Looks like you haven't added anything yet.</p>
+          <a href="index.html">Browse Collection</a>
+        </div>`;
+      return;
+    }
+
+    let subtotal = 0;
+
+    cart.forEach((item, idx) => {
+      subtotal += item.price * item.qty;
+
+      // Cart item row
+      const div = document.createElement('div');
+      div.className = 'cart-item';
+      div.innerHTML = `
+        <div class="cart-item-img">${item.imgHTML}</div>
+        <div class="cart-item-details">
+          <div class="cart-item-name">${item.title}</div>
+          <div class="cart-item-variant">${item.variant}</div>
+          <div class="cart-item-dates">
+            <div class="cart-item-date-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span>Needed: ${item.pickup !== 'Select date & time' ? item.pickup : '—'}</span>
+            </div>
+            <div class="cart-item-date-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span>Return: ${item.ret !== 'Select date & time' ? item.ret : '—'}</span>
+            </div>
+            ${item.duration ? `<div class="cart-item-duration">${item.duration}</div>` : ''}
+          </div>
+          <div class="cart-item-price">$${item.price} <span style="font-size:0.62rem;color:var(--text-soft);">/ day</span></div>
+        </div>
+        <div class="cart-item-right">
+          <div class="cart-qty">
+            <button class="cart-qty-btn" onclick="changeQty(${idx}, -1)">−</button>
+            <div class="cart-qty-num">${item.qty}</div>
+            <button class="cart-qty-btn" onclick="changeQty(${idx}, 1)">+</button>
+          </div>
+          <div class="cart-item-subtotal">
+            <span>Subtotal</span>
+            $${(item.price * item.qty).toFixed(2)}
+          </div>
+          <button class="cart-remove" onclick="removeItem(${idx})">Remove</button>
+        </div>`;
+      itemsEl.appendChild(div);
+
+      // Summary row
+      const row = document.createElement('div');
+      row.className = 'summary-row';
+      row.innerHTML = `<span>${item.title} × ${item.qty}</span><span>$${(item.price * item.qty).toFixed(2)}</span>`;
+      summaryEl.appendChild(row);
+    });
+
+    totalEl.textContent = '$' + subtotal.toFixed(2);
+  }
+
+  function changeQty(idx, delta) {
+    const cart = loadCart();
+    cart[idx].qty = Math.min(5, Math.max(1, cart[idx].qty + delta));
+    saveCart(cart);
+    render();
+  }
+
+  function removeItem(idx) {
+    const cart = loadCart();
+    cart.splice(idx, 1);
+    saveCart(cart);
+    render();
+  }
+
+  render();
+</script>
+
+</body>
+</html>

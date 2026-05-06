@@ -223,7 +223,7 @@
     .continue-btn {
       width: 100%; margin-top: 10px;
       padding: 13px;
-      background: none; color: var(--text-mid);
+      background: var(--cream); color: var(--text-dark);
       border: 1px solid rgba(201,180,154,0.5);
       border-radius: 10px;
       font-family: 'Jost', sans-serif;
@@ -233,7 +233,7 @@
       display: block; text-align: center;
       transition: all 0.25s;
     }
-    .continue-btn:hover { background: rgba(201,180,154,0.1); color: var(--text-dark); }
+    .continue-btn:hover { background: var(--parchment); border-color: var(--warm-tan); }
 
     .summary-note {
       margin-top: 14px;
@@ -290,15 +290,12 @@
     <div class="summary-title">Order Summary</div>
     <div id="summaryRows"></div>
     <div class="summary-row total">
-      <strong>Order Total</strong>
+      <strong>Subtotal</strong>
       <strong id="summaryTotal">$0.00</strong>
-    </div>
-    <div class="damage-note" id="damageNote" style="display:none;">
-      A <strong>$175.00 damage hold</strong> will be pre-authorized on your card and released after safe return.
     </div>
     <a href="checkout.html" class="checkout-btn">Proceed to Checkout</a>
     <a href="index.html" class="continue-btn">Continue Shopping</a>
-    <p class="summary-note">50% deposit charged at checkout · Remaining 50% collected 48 hrs before pickup</p>
+    <p class="summary-note">Delivery fee and tax calculated at checkout · 50% deposit due at booking</p>
   </div>
 
 </div>
@@ -430,47 +427,22 @@
       rowsEl.appendChild(row);
     });
 
-    // Delivery fee — estimated at 10 miles if no ZIP known yet
-    const deliveryMiles = 10;
-    const deliveryFee = deliveryMiles * DELIVERY_RATE;
-    const tax = subtotal * TAX_RATE;
-    const deposit = (subtotal + deliveryFee + tax) * 0.5;
-
+    // Simple cart summary — just subtotal, no delivery/tax yet
     const divider = document.createElement('div');
     divider.style = 'height:1px;background:rgba(201,180,154,0.2);margin:8px 0;';
     rowsEl.appendChild(divider);
 
-    const rows = [
-      ['Subtotal', `$${subtotal.toFixed(2)}`],
-      [`Delivery (est. ${deliveryMiles} mi × $${DELIVERY_RATE}/mi)`, `$${deliveryFee.toFixed(2)}`],
-      ['CA Sales Tax (9.875%)', `$${tax.toFixed(2)}`],
-    ];
-    rows.forEach(([label, val]) => {
-      const r = document.createElement('div');
-      r.className = 'summary-row';
-      r.innerHTML = `<span>${label}</span><span>${val}</span>`;
-      rowsEl.appendChild(r);
-    });
+    const subtotalRow = document.createElement('div');
+    subtotalRow.className = 'summary-row total';
+    subtotalRow.innerHTML = `<strong>Subtotal</strong><strong>$${subtotal.toFixed(2)}</strong>`;
+    rowsEl.appendChild(subtotalRow);
 
-    // Order total line
-    const totalLine = document.createElement('div');
-    totalLine.className = 'summary-row total';
-    totalLine.innerHTML = `<strong>Order Total</strong><strong>$${(subtotal + deliveryFee + tax).toFixed(2)}</strong>`;
-    rowsEl.appendChild(totalLine);
+    const note = document.createElement('div');
+    note.style = 'font-size:0.6rem;color:#a99589;margin-top:8px;line-height:1.6;';
+    note.textContent = 'Delivery fee and CA sales tax will be calculated at checkout.';
+    rowsEl.appendChild(note);
 
-    // Deposit callout — visually separated
-    const depositBox = document.createElement('div');
-    depositBox.style = 'margin-top:14px;background:rgba(245,238,230,0.7);border:1px solid rgba(201,180,154,0.3);border-radius:8px;padding:12px 14px;';
-    depositBox.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-        <span style="font-size:0.68rem;letter-spacing:0.12em;color:#7a6a60;">50% Deposit Due Today</span>
-        <span style="font-size:1rem;font-weight:400;color:#3a2e28;">$${deposit.toFixed(2)}</span>
-      </div>
-      <div style="font-size:0.6rem;color:#a99589;line-height:1.6;">The remaining $${deposit.toFixed(2)} will be collected 48 hours before your pickup date.</div>`;
-    rowsEl.appendChild(depositBox);
-
-    totalEl.textContent = '$' + deposit.toFixed(2);
-    document.getElementById('damageNote').style.display = 'block';
+    totalEl.textContent = '$' + subtotal.toFixed(2);
   }
 
   function changeQty(idx, delta) {

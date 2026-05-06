@@ -337,14 +337,15 @@
 
   async function fetchSuggestions(val) {
     const box = document.getElementById('suggestions-box');
-    if (!val || val.length < 4) { box.style.display = 'none'; return; }
+    if (!val || val.length < 1) { box.style.display = 'none'; return; }
 
     clearTimeout(suggestTimer);
     suggestTimer = setTimeout(async () => {
       try {
+        const query = encodeURIComponent(val + ' California');
         const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val + ', Bay Area, CA')}&format=json&addressdetails=1&limit=6&countrycodes=us`,
-          { headers: { 'Accept-Language': 'en' } }
+          `https://nominatim.openstreetmap.org/search?q=${query}&format=json&addressdetails=1&limit=6&countrycodes=us&viewbox=-122.8,38.5,-121.0,36.8&bounded=1`,
+          { headers: { 'Accept-Language': 'en', 'User-Agent': 'TheBackdropBar/1.0' } }
         );
         const data = await res.json();
         box.innerHTML = '';
@@ -357,7 +358,7 @@
           const street = [a.house_number, a.road].filter(Boolean).join(' ');
           const city   = a.city || a.town || a.village || a.suburb || '';
           const zip    = a.postcode || '';
-          const label  = place.display_name.split(',').slice(0,3).join(',');
+          const label  = place.display_name.split(',').slice(0, 3).join(',').trim();
 
           const item = document.createElement('div');
           item.style = 'padding:11px 16px;font-size:0.75rem;color:#3a2e28;cursor:pointer;border-bottom:1px solid rgba(201,180,154,0.15);line-height:1.4;';
@@ -373,7 +374,7 @@
           box.appendChild(item);
         });
       } catch(e) { box.style.display = 'none'; }
-    }, 400);
+    }, 300);
   }
 
   document.addEventListener('click', e => {
@@ -440,20 +441,29 @@
       itemsEl.appendChild(div);
     });
 
-    // Check if order is within 48hrs — charge full amount
     const isUrgent = isWithin48Hours();
     const depositRate = isUrgent ? 1.0 : 0.5;
-    const depositLabel = isUrgent ? 'Full Payment (within 48hrs)' : '50% Deposit';
-
     const tax      = subtotal * TAX_RATE;
-    const deposit  = (subtotal + tax) * depositRate;
+    const deliveryFee = 25.00; // estimated, updated when ZIP entered
+    const orderTotal = subtotal + deliveryFee + tax;
+    const deposit  = orderTotal * depositRate;
 
     rowsEl.innerHTML = `
       <div class="summary-row"><span>Subtotal</span><span>$${subtotal.toFixed(2)}</span></div>
+      <div class="summary-row"><span>Delivery (est. 10 mi × $2.50/mi)</span><span>$${deliveryFee.toFixed(2)}</span></div>
       <div class="summary-row"><span>CA Sales Tax (9.875%)</span><span>$${tax.toFixed(2)}</span></div>
-      <div class="summary-row highlight"><span>${depositLabel}</span><span>$${deposit.toFixed(2)}</span></div>`;
+      <div class="summary-row total" style="margin-top:8px;"><strong>Order Total</strong><strong>$${orderTotal.toFixed(2)}</strong></div>`;
 
-    depositEl.textContent = '$' + deposit.toFixed(2);
+    // Deposit callout box
+    const depositBox = document.createElement('div');
+    depositBox.style = 'margin-top:14px;background:rgba(245,238,230,0.7);border:1px solid rgba(201,180,154,0.3);border-radius:8px;padding:12px 14px;';
+    depositBox.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <span style="font-size:0.68rem;letter-spacing:0.12em;color:#7a6a60;">${isUrgent ? 'Full Payment (within 48hrs)' : '50% Deposit Due Today'}</span>
+        <span style="font-size:1rem;font-weight:400;color:#3a2e28;">$${deposit.toFixed(2)}</span>
+      </div>
+      <div style="font-size:0.6rem;color:#a99589;line-height:1.6;">${isUrgent ? 'Charged in full — non-refundable.' : `The remaining $${deposit.toFixed(2)} will be collected 48 hours before your pickup date.`}</div>`;
+    rowsEl.appendChild(depositBox);
 
     if (isUrgent) {
       const notice = document.createElement('div');
@@ -462,7 +472,7 @@
       rowsEl.appendChild(notice);
     }
 
-    // Update pay button
+    depositEl.textContent = '$' + deposit.toFixed(2);
     document.getElementById('payBtn').textContent = `Pay $${deposit.toFixed(2)} Now`;
   }
 

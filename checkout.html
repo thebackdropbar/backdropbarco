@@ -8,7 +8,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:wght@300;400&family=Jost:wght@200;300;400&display=swap" rel="stylesheet">
   <script src="https://js.stripe.com/v3/"></script>
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD-YOUR-KEY-HERE&libraries=places" async defer></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -333,76 +332,50 @@
 </div>
 
 <script>
-  // ── Address autocomplete
-  let autocompleteService, sessionToken;
+  // ── Address autocomplete using OpenStreetMap Nominatim (free, no API key)
+  let suggestTimer = null;
 
-  function initAutocomplete() {
-    autocompleteService = new google.maps.places.AutocompleteService();
-    sessionToken = new google.maps.places.AutocompleteSessionToken();
-  }
-
-  function fetchSuggestions(val) {
+  async function fetchSuggestions(val) {
     const box = document.getElementById('suggestions-box');
-    if (!val || val.length < 3) { box.style.display = 'none'; return; }
-    if (!autocompleteService) { initAutocomplete(); }
+    if (!val || val.length < 4) { box.style.display = 'none'; return; }
 
-    autocompleteService.getPlacePredictions({
-      input: val,
-      sessionToken,
-      componentRestrictions: { country: 'us' },
-      bounds: new google.maps.LatLngBounds(
-        new google.maps.LatLng(36.9, -122.5),
-        new google.maps.LatLng(38.3, -121.2)
-      )
-    }, (predictions, status) => {
-      box.innerHTML = '';
-      if (status !== 'OK' || !predictions) { box.style.display = 'none'; return; }
-      box.style.display = 'block';
-      predictions.forEach(p => {
-        const item = document.createElement('div');
-        item.style = 'padding:11px 16px;font-size:0.75rem;color:#3a2e28;cursor:pointer;border-bottom:1px solid rgba(201,180,154,0.15);transition:background 0.15s;';
-        item.textContent = p.description;
-        item.onmouseover = () => item.style.background = 'rgba(201,180,154,0.1)';
-        item.onmouseout  = () => item.style.background = '';
-        item.onclick = () => selectAddress(p);
-        box.appendChild(item);
-      });
-    });
+    clearTimeout(suggestTimer);
+    suggestTimer = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val + ', Bay Area, CA')}&format=json&addressdetails=1&limit=6&countrycodes=us`,
+          { headers: { 'Accept-Language': 'en' } }
+        );
+        const data = await res.json();
+        box.innerHTML = '';
+
+        if (!data || data.length === 0) { box.style.display = 'none'; return; }
+
+        box.style.display = 'block';
+        data.forEach(place => {
+          const a = place.address;
+          const street = [a.house_number, a.road].filter(Boolean).join(' ');
+          const city   = a.city || a.town || a.village || a.suburb || '';
+          const zip    = a.postcode || '';
+          const label  = place.display_name.split(',').slice(0,3).join(',');
+
+          const item = document.createElement('div');
+          item.style = 'padding:11px 16px;font-size:0.75rem;color:#3a2e28;cursor:pointer;border-bottom:1px solid rgba(201,180,154,0.15);line-height:1.4;';
+          item.textContent = label;
+          item.onmouseover = () => item.style.background = 'rgba(201,180,154,0.1)';
+          item.onmouseout  = () => item.style.background = '';
+          item.onclick = () => {
+            document.getElementById('address').value = street || label;
+            document.getElementById('city').value    = city;
+            document.getElementById('zip').value     = zip;
+            box.style.display = 'none';
+          };
+          box.appendChild(item);
+        });
+      } catch(e) { box.style.display = 'none'; }
+    }, 400);
   }
 
-  function selectAddress(prediction) {
-    const box = document.getElementById('suggestions-box');
-    box.style.display = 'none';
-
-    // Parse the description to fill fields
-    const parts = prediction.description.split(',');
-    document.getElementById('address').value = parts[0]?.trim() || prediction.description;
-
-    // Extract city and ZIP from structured formatting
-    const terms = prediction.terms;
-    if (terms && terms.length >= 2) {
-      document.getElementById('city').value = terms[1]?.value || '';
-    }
-
-    // Get full place details to extract ZIP
-    const placesService = new google.maps.places.PlacesService(document.createElement('div'));
-    placesService.getDetails({ placeId: prediction.place_id, fields: ['address_components'] }, (place) => {
-      if (!place) return;
-      place.address_components.forEach(c => {
-        if (c.types.includes('postal_code')) {
-          document.getElementById('zip').value = c.long_name;
-        }
-        if (c.types.includes('locality')) {
-          document.getElementById('city').value = c.long_name;
-        }
-      });
-    });
-
-    // Reset session token after selection
-    sessionToken = new google.maps.places.AutocompleteSessionToken();
-  }
-
-  // Close suggestions when clicking outside
   document.addEventListener('click', e => {
     if (!e.target.closest('#address') && !e.target.closest('#suggestions-box')) {
       document.getElementById('suggestions-box').style.display = 'none';

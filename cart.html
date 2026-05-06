@@ -290,7 +290,7 @@
     <div class="summary-title">Order Summary</div>
     <div id="summaryRows"></div>
     <div class="summary-row total">
-      <strong>Deposit Due Today</strong>
+      <strong>Order Total</strong>
       <strong id="summaryTotal">$0.00</strong>
     </div>
     <div class="damage-note" id="damageNote" style="display:none;">
@@ -444,7 +444,6 @@
       ['Subtotal', `$${subtotal.toFixed(2)}`],
       [`Delivery (est. ${deliveryMiles} mi × $${DELIVERY_RATE}/mi)`, `$${deliveryFee.toFixed(2)}`],
       ['CA Sales Tax (9.875%)', `$${tax.toFixed(2)}`],
-      ['50% Deposit', `$${deposit.toFixed(2)}`],
     ];
     rows.forEach(([label, val]) => {
       const r = document.createElement('div');
@@ -452,6 +451,23 @@
       r.innerHTML = `<span>${label}</span><span>${val}</span>`;
       rowsEl.appendChild(r);
     });
+
+    // Order total line
+    const totalLine = document.createElement('div');
+    totalLine.className = 'summary-row total';
+    totalLine.innerHTML = `<strong>Order Total</strong><strong>$${(subtotal + deliveryFee + tax).toFixed(2)}</strong>`;
+    rowsEl.appendChild(totalLine);
+
+    // Deposit callout — visually separated
+    const depositBox = document.createElement('div');
+    depositBox.style = 'margin-top:14px;background:rgba(245,238,230,0.7);border:1px solid rgba(201,180,154,0.3);border-radius:8px;padding:12px 14px;';
+    depositBox.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <span style="font-size:0.68rem;letter-spacing:0.12em;color:#7a6a60;">50% Deposit Due Today</span>
+        <span style="font-size:1rem;font-weight:400;color:#3a2e28;">$${deposit.toFixed(2)}</span>
+      </div>
+      <div style="font-size:0.6rem;color:#a99589;line-height:1.6;">The remaining $${deposit.toFixed(2)} will be collected 48 hours before your pickup date.</div>`;
+    rowsEl.appendChild(depositBox);
 
     totalEl.textContent = '$' + deposit.toFixed(2);
     document.getElementById('damageNote').style.display = 'block';

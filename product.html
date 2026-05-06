@@ -58,7 +58,8 @@
       display: flex;
       flex-direction: row;
       gap: 10px;
-      align-items: flex-start;
+      align-items: stretch;
+      height: 100%;
     }
 
     /* Thumbnails — vertical strip on the left */
@@ -83,11 +84,11 @@
 
     .main-image-wrap {
       flex: 1;
-      aspect-ratio: 4/5;
       border-radius: 16px;
       overflow: hidden;
       background: var(--parchment);
       position: relative;
+      min-height: 500px;
     }
     .main-image-wrap svg,
     .main-image-wrap img {
@@ -491,7 +492,7 @@
     <button class="add-to-cart-btn" onclick="addToCart()">Add to Cart</button>
 
     <!-- Go to cart -->
-    <a href="cart.html" style="display:block;width:100%;padding:16px;text-align:center;border:1px solid rgba(201,180,154,0.6);border-radius:10px;font-family:'Jost',sans-serif;font-size:0.72rem;font-weight:300;letter-spacing:0.22em;text-transform:uppercase;color:var(--text-mid);text-decoration:none;transition:all 0.25s;" onmouseover="this.style.background='rgba(201,180,154,0.12)';this.style.color='var(--text-dark)'" onmouseout="this.style.background='';this.style.color='var(--text-mid)'">Go to Cart</a>
+    <a href="cart.html" class="add-to-cart-btn" style="display:block;text-align:center;text-decoration:none;background:rgba(201,180,154,0.15);color:var(--text-dark);border:1px solid rgba(201,180,154,0.5);">Go to Cart</a>
   </div>
 
 </div>
@@ -764,22 +765,38 @@
   }
 
   function addToCart() {
-    // Gather all selected options
+    // Validate dates are selected
+    const pickup = document.getElementById('pickup-display').textContent;
+    const ret    = document.getElementById('return-display').textContent;
+
+    if (pickup === 'Select date & time') {
+      document.getElementById('pickup-field').style.borderColor = '#c9705a';
+      document.getElementById('rental-duration').textContent = 'Please select a pickup date and time.';
+      document.getElementById('rental-duration').style.color = '#c9705a';
+      document.getElementById('pickup-field').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    if (ret === 'Select date & time') {
+      document.getElementById('return-field').style.borderColor = '#c9705a';
+      document.getElementById('rental-duration').textContent = 'Please select a return date and time.';
+      document.getElementById('rental-duration').style.color = '#c9705a';
+      return;
+    }
+
+    // Reset border colors
+    document.getElementById('pickup-field').style.borderColor = '';
+    document.getElementById('return-field').style.borderColor = '';
+
     const title    = document.getElementById('productTitle').textContent;
-    const priceStr = document.getElementById('productPrice').textContent.trim().split(' ')[0]; // e.g. "$85"
+    const priceStr = document.getElementById('productPrice').textContent.trim().split(' ')[0];
     const price    = parseFloat(priceStr.replace('$',''));
     const variantBtn = document.querySelector('.variant-btn.selected');
     const variant  = variantBtn ? variantBtn.textContent : '';
-    const pickup   = document.getElementById('pickup-display').textContent;
-    const ret      = document.getElementById('return-display').textContent;
     const duration = document.getElementById('rental-duration').textContent;
-
-    // Get current image SVG as data URI for cart thumbnail
     const imgHTML  = document.getElementById('mainImageContent').innerHTML;
 
     const item = { title, price, variant, qty, pickup, ret, duration, imgHTML, id: Date.now() };
 
-    // Load existing cart, add item, save back
     let cart = JSON.parse(localStorage.getItem('tbb_cart') || '[]');
     cart.push(item);
     localStorage.setItem('tbb_cart', JSON.stringify(cart));

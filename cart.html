@@ -241,6 +241,14 @@
       color: var(--text-soft); line-height: 1.8; text-align: center;
     }
 
+    .damage-note {
+      margin-top: 12px; font-size: 0.6rem; letter-spacing: 0.08em;
+      color: var(--text-soft); line-height: 1.7;
+      padding: 10px 12px;
+      background: rgba(245,238,230,0.5);
+      border-radius: 6px;
+    }
+
     /* ── RESPONSIVE ── */
     @media (max-width: 768px) {
       .cart-page { grid-template-columns: 1fr; padding: 28px 16px 60px; gap: 28px; }
@@ -282,38 +290,88 @@
     <div class="summary-title">Order Summary</div>
     <div id="summaryRows"></div>
     <div class="summary-row total">
-      <strong>Total</strong>
-      <strong id="summaryTotal">$0</strong>
+      <strong>Deposit Due Today</strong>
+      <strong id="summaryTotal">$0.00</strong>
+    </div>
+    <div class="damage-note" id="damageNote" style="display:none;">
+      A <strong>$175.00 damage hold</strong> will be pre-authorized on your card and released after safe return.
     </div>
     <a href="checkout.html" class="checkout-btn">Proceed to Checkout</a>
     <a href="index.html" class="continue-btn">Continue Shopping</a>
-    <p class="summary-note">Prices shown per day · Final total calculated at checkout based on rental duration</p>
+    <p class="summary-note">50% deposit charged at checkout · Remaining 50% collected 48 hrs before pickup</p>
   </div>
 
 </div>
 
 <script>
-  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const TAX_RATE = 0.09875;
+  const DELIVERY_RATE = 2.50; // $2.50 per mile from Fremont
+  const FREMONT_CENTER = { lat: 37.5485, lng: -121.9886 };
 
-  function loadCart() {
-    return JSON.parse(localStorage.getItem('tbb_cart') || '[]');
+  // Approximate miles from Fremont center by ZIP (precomputed)
+  const ZIP_MILES = {
+    '94536':0,'94537':0,'94538':1,'94539':2,'94555':3,
+    '94541':4,'94542':4,'94543':4,'94544':4,'94545':5,'94546':7,
+    '94601':12,'94602':12,'94603':13,'94604':12,'94605':12,'94606':13,
+    '94607':14,'94608':13,'94609':13,'94610':13,'94611':12,'94612':14,
+    '94613':13,'94618':13,'94619':12,'94621':13,
+    '94701':15,'94702':15,'94703':15,'94704':15,'94705':14,'94706':16,
+    '94707':16,'94708':16,'94709':15,'94710':15,'94720':15,
+    '94577':6,'94578':7,'94579':7,'94580':6,'94587':4,'94560':3,
+    '94501':10,'94502':9,
+    '95035':8,'95036':8,
+    '95101':18,'95110':18,'95112':18,'95113':18,'95116':19,'95117':20,
+    '95118':21,'95119':22,'95120':23,'95121':20,'95122':19,'95123':22,
+    '95124':21,'95125':19,'95126':19,'95127':20,'95128':20,'95129':21,
+    '95130':21,'95131':19,'95132':20,'95133':19,'95134':18,'95135':21,
+    '95136':22,'95138':22,'95139':23,'95148':21,
+    '95050':20,'95051':21,'95052':20,'95053':20,'95054':18,'95055':20,
+    '94085':24,'94086':24,'94087':25,'94088':24,'94089':23,
+    '94040':27,'94041':27,'94042':27,'94043':26,
+    '94301':28,'94302':28,'94303':27,'94304':28,'94305':29,'94306':28,
+    '94061':30,'94062':31,'94063':29,'94064':30,'94065':28,
+    '94401':32,'94402':31,'94403':30,'94404':29,
+    '94010':34,'94030':35,'94066':35,'94080':36,
+    '94014':38,'94015':38,'94016':38,'94017':38,
+    '94102':38,'94103':38,'94104':39,'94105':38,'94107':37,'94108':39,
+    '94109':39,'94110':38,'94111':39,'94112':38,'94114':38,'94115':39,
+    '94116':39,'94117':39,'94118':39,'94121':40,'94122':40,'94123':40,
+    '94124':37,'94127':39,'94129':41,'94130':37,'94131':38,'94132':40,
+    '94133':40,'94134':37,'94158':37,
+    '94568':13,'94566':14,'94550':18,'94551':20,
+    '94582':16,'94583':15,'94526':18,
+    '94595':19,'94596':19,'94597':19,'94598':19,
+    '94518':20,'94519':20,'94520':21,'94521':21,'94522':21,'94523':22,
+    '94801':20,'94802':20,'94803':19,'94804':19,'94805':20,'94806':20,
+    '94509':25,'94531':24,'94565':24,'94513':28,
+    '94556':18,'94563':20,'94549':18,
+    '95014':25,'95015':25,'95008':22,'95009':22,
+    '95030':26,'95031':26,'95032':25,'95033':28,
+    '94022':28,'94023':28,'94024':27,'94025':29,'94026':29,
+    '94002':32,'94070':31
+  };
+
+  // Bay Area ZIPs only
+  const BAY_AREA_ZIPS = new Set(Object.keys(ZIP_MILES));
+
+  function getMilesForZip(zip) {
+    return ZIP_MILES[zip.trim()] ?? null;
   }
-  function saveCart(cart) {
-    localStorage.setItem('tbb_cart', JSON.stringify(cart));
-  }
+
+  function loadCart() { return JSON.parse(localStorage.getItem('tbb_cart') || '[]'); }
+  function saveCart(cart) { localStorage.setItem('tbb_cart', JSON.stringify(cart)); }
 
   function render() {
-    const cart = loadCart();
-    const itemsEl   = document.getElementById('cartItems');
-    const summaryEl = document.getElementById('summaryRows');
-    const totalEl   = document.getElementById('summaryTotal');
-    const pageEl    = document.getElementById('cartPage');
+    const cart    = loadCart();
+    const itemsEl = document.getElementById('cartItems');
+    const rowsEl  = document.getElementById('summaryRows');
+    const totalEl = document.getElementById('summaryTotal');
+    const pageEl  = document.getElementById('cartPage');
 
     itemsEl.innerHTML = '';
-    summaryEl.innerHTML = '';
+    rowsEl.innerHTML  = '';
 
     if (cart.length === 0) {
-      // Show empty state
       pageEl.innerHTML = `
         <div class="cart-empty">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
@@ -332,8 +390,6 @@
 
     cart.forEach((item, idx) => {
       subtotal += item.price * item.qty;
-
-      // Cart item row
       const div = document.createElement('div');
       div.className = 'cart-item';
       div.innerHTML = `
@@ -368,28 +424,49 @@
         </div>`;
       itemsEl.appendChild(div);
 
-      // Summary row
       const row = document.createElement('div');
       row.className = 'summary-row';
       row.innerHTML = `<span>${item.title} × ${item.qty}</span><span>$${(item.price * item.qty).toFixed(2)}</span>`;
-      summaryEl.appendChild(row);
+      rowsEl.appendChild(row);
     });
 
-    totalEl.textContent = '$' + subtotal.toFixed(2);
+    // Delivery fee — estimated at 10 miles if no ZIP known yet
+    const deliveryMiles = 10;
+    const deliveryFee = deliveryMiles * DELIVERY_RATE;
+    const tax = subtotal * TAX_RATE;
+    const deposit = (subtotal + deliveryFee + tax) * 0.5;
+
+    const divider = document.createElement('div');
+    divider.style = 'height:1px;background:rgba(201,180,154,0.2);margin:8px 0;';
+    rowsEl.appendChild(divider);
+
+    const rows = [
+      ['Subtotal', `$${subtotal.toFixed(2)}`],
+      [`Delivery (est. ${deliveryMiles} mi × $${DELIVERY_RATE}/mi)`, `$${deliveryFee.toFixed(2)}`],
+      ['CA Sales Tax (9.875%)', `$${tax.toFixed(2)}`],
+      ['50% Deposit', `$${deposit.toFixed(2)}`],
+    ];
+    rows.forEach(([label, val]) => {
+      const r = document.createElement('div');
+      r.className = 'summary-row';
+      r.innerHTML = `<span>${label}</span><span>${val}</span>`;
+      rowsEl.appendChild(r);
+    });
+
+    totalEl.textContent = '$' + deposit.toFixed(2);
+    document.getElementById('damageNote').style.display = 'block';
   }
 
   function changeQty(idx, delta) {
     const cart = loadCart();
     cart[idx].qty = Math.min(5, Math.max(1, cart[idx].qty + delta));
-    saveCart(cart);
-    render();
+    saveCart(cart); render();
   }
 
   function removeItem(idx) {
     const cart = loadCart();
     cart.splice(idx, 1);
-    saveCart(cart);
-    render();
+    saveCart(cart); render();
   }
 
   render();

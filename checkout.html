@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Checkout — The Backdrop Bar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:wght@300;400&family=Jost:wght@200;300;400&display=swap" rel="stylesheet">
+  <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --cream: #fdf8f3; --parchment: #f5ede1; --blush: #e8cfc2; --rose: #d4a89a;
+      --warm-tan: #c9b49a; --text-dark: #3a2e28; --text-mid: #7a6a60; --text-soft: #a99589;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--cream); color: var(--text-dark); font-family: 'Jost', sans-serif; font-weight: 300; }
+
+    /* ── NAV ── */
+    .top-nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 40px;
+      background: var(--cream);
+      border-bottom: 1px solid rgba(201,180,154,0.25);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .top-nav-logo { font-family: 'Great Vibes', cursive; font-size: 1.6rem; color: var(--text-dark); text-decoration: none; }
+    .top-nav-back {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--text-soft); text-decoration: none; transition: color 0.2s;
+    }
+    .top-nav-back:hover { color: var(--text-dark); }
+    .top-nav-back svg { width: 14px; height: 14px; }
+
+    /* ── LAYOUT ── */
+    .checkout-page {
+      max-width: 1000px; margin: 0 auto;
+      padding: 48px 24px 80px;
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 40px;
+      align-items: start;
+    }
+
+    /* ── SECTION TITLES ── */
+    .section-eyebrow { font-size: 0.62rem; letter-spacing: 0.26em; text-transform: uppercase; color: var(--text-soft); margin-bottom: 6px; }
+    .section-title { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 300; color: var(--text-dark); margin-bottom: 20px; }
+
+    /* ── FORM ── */
+    .form-section { display: flex; flex-direction: column; gap: 28px; }
+    .form-block {
+      background: white;
+      border: 1px solid rgba(201,180,154,0.25);
+      border-radius: 14px;
+      padding: 24px;
+    }
+    .form-block-title {
+      font-size: 0.68rem; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--text-soft); margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(201,180,154,0.2);
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-row.single { grid-template-columns: 1fr; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-label { font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-soft); }
+    .form-input {
+      padding: 11px 14px;
+      border: 1px solid rgba(201,180,154,0.45);
+      border-radius: 8px;
+      font-family: 'Jost', sans-serif;
+      font-size: 0.82rem; font-weight: 300;
+      color: var(--text-dark);
+      background: white;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus { border-color: var(--warm-tan); }
+
+    /* ── STRIPE CARD ELEMENT ── */
+    .stripe-element {
+      padding: 12px 14px;
+      border: 1px solid rgba(201,180,154,0.45);
+      border-radius: 8px;
+      background: white;
+      transition: border-color 0.2s;
+    }
+    .stripe-element.focused { border-color: var(--warm-tan); }
+
+    /* ── POLICY NOTICE ── */
+    .policy-box {
+      background: rgba(245,238,230,0.6);
+      border: 1px solid rgba(201,180,154,0.2);
+      border-radius: 10px;
+      padding: 16px 18px;
+    }
+    .policy-title { font-size: 0.65rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-mid); margin-bottom: 10px; }
+    .policy-row { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 7px; font-size: 0.72rem; color: var(--text-mid); line-height: 1.6; }
+    .policy-row:last-child { margin-bottom: 0; }
+    .policy-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--warm-tan); margin-top: 7px; flex-shrink: 0; }
+
+    /* ── ORDER SUMMARY ── */
+    .order-summary {
+      background: white;
+      border: 1px solid rgba(201,180,154,0.25);
+      border-radius: 14px;
+      padding: 24px;
+      position: sticky; top: 80px;
+    }
+    .summary-title { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; font-weight: 300; color: var(--text-dark); margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid rgba(201,180,154,0.2); }
+    .summary-items { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+    .summary-item { display: flex; gap: 12px; align-items: start; }
+    .summary-item-img { width: 52px; height: 64px; border-radius: 6px; overflow: hidden; background: var(--parchment); flex-shrink: 0; }
+    .summary-item-img svg { width: 100%; height: 100%; display: block; }
+    .summary-item-info { flex: 1; }
+    .summary-item-name { font-family: 'Cormorant Garamond', serif; font-size: 0.9rem; color: var(--text-dark); margin-bottom: 2px; }
+    .summary-item-variant { font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-soft); margin-bottom: 4px; }
+    .summary-item-dates { font-size: 0.65rem; color: var(--text-mid); line-height: 1.7; }
+    .summary-item-price { font-size: 0.82rem; color: var(--text-dark); text-align: right; white-space: nowrap; }
+
+    .summary-divider { height: 1px; background: rgba(201,180,154,0.2); margin: 12px 0; }
+    .summary-row { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-mid); padding: 5px 0; }
+    .summary-row.highlight { color: var(--text-dark); }
+    .summary-row.total { font-size: 0.88rem; color: var(--text-dark); padding-top: 10px; border-top: 1px solid rgba(201,180,154,0.25); margin-top: 6px; }
+    .summary-row.total strong { font-weight: 400; }
+
+    .damage-note {
+      margin-top: 12px; font-size: 0.6rem; letter-spacing: 0.08em;
+      color: var(--text-soft); line-height: 1.7;
+      padding: 10px 12px;
+      background: rgba(245,238,230,0.5);
+      border-radius: 6px;
+    }
+
+    /* ── SUBMIT BUTTON ── */
+    .pay-btn {
+      width: 100%; margin-top: 20px;
+      padding: 16px;
+      background: var(--text-dark); color: white;
+      border: none; border-radius: 10px;
+      font-family: 'Jost', sans-serif;
+      font-size: 0.72rem; font-weight: 300;
+      letter-spacing: 0.22em; text-transform: uppercase;
+      cursor: pointer; transition: background 0.25s;
+    }
+    .pay-btn:hover:not(:disabled) { background: var(--text-mid); }
+    .pay-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .secure-note {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      margin-top: 12px; font-size: 0.6rem; letter-spacing: 0.1em; color: var(--text-soft);
+    }
+    .secure-note svg { width: 12px; height: 12px; stroke: var(--text-soft); }
+
+    /* ── ERROR ── */
+    .error-msg { color: #c0392b; font-size: 0.72rem; margin-top: 10px; min-height: 20px; }
+
+    /* ── SUCCESS ── */
+    .success-screen {
+      display: none;
+      text-align: center;
+      padding: 80px 24px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    .success-screen.show { display: block; }
+    .success-icon { font-size: 3rem; margin-bottom: 20px; }
+    .success-title { font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 300; color: var(--text-dark); margin-bottom: 12px; }
+    .success-msg { font-size: 0.78rem; color: var(--text-mid); line-height: 1.8; margin-bottom: 28px; }
+    .success-btn {
+      display: inline-block; padding: 14px 36px;
+      background: var(--text-dark); color: white;
+      border-radius: 8px; text-decoration: none;
+      font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .checkout-page { grid-template-columns: 1fr; padding: 24px 16px 60px; gap: 24px; }
+      .order-summary { position: static; }
+      .form-row { grid-template-columns: 1fr; }
+      .top-nav { padding: 14px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav class="top-nav">
+  <a href="cart.html" class="top-nav-back">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Back to Cart
+  </a>
+  <a href="index.html" class="top-nav-logo">the backdrop bar</a>
+  <div style="width:80px;"></div>
+</nav>
+
+<!-- ── SUCCESS SCREEN ── -->
+<div class="success-screen" id="successScreen">
+  <div class="success-icon">✨</div>
+  <div class="success-title">Booking Confirmed!</div>
+  <p class="success-msg">
+    Thank you for your order. A confirmation has been sent to your email.<br><br>
+    Your 50% deposit has been charged. The remaining balance will be collected 48 hours before your pickup date.<br><br>
+    A $175 damage hold has been placed on your card and will be released after your items are returned.
+  </p>
+  <a href="index.html" class="success-btn">Back to Home</a>
+</div>
+
+<!-- ── CHECKOUT LAYOUT ── -->
+<div class="checkout-page" id="checkoutPage">
+
+  <!-- LEFT: Form -->
+  <div class="form-section">
+    <div>
+      <div class="section-eyebrow">Almost There</div>
+      <div class="section-title">Checkout</div>
+    </div>
+
+    <!-- Contact info -->
+    <div class="form-block">
+      <div class="form-block-title">Contact Information</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">First Name</label>
+          <input class="form-input" type="text" id="firstName" placeholder="Jane"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Last Name</label>
+          <input class="form-input" type="text" id="lastName" placeholder="Smith"/>
+        </div>
+      </div>
+      <div class="form-row single" style="margin-top:14px;">
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" type="email" id="email" placeholder="jane@example.com"/>
+        </div>
+      </div>
+      <div class="form-row single" style="margin-top:14px;">
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input class="form-input" type="tel" id="phone" placeholder="(415) 555-0100"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delivery address -->
+    <div class="form-block">
+      <div class="form-block-title">Delivery Address</div>
+      <div style="font-size:0.65rem;color:var(--text-soft);margin-bottom:14px;line-height:1.7;">
+        We are proud to serve the greater Bay Area — available for delivery within 50 miles of Fremont, California.
+      </div>
+      <div class="form-row single">
+        <div class="form-group">
+          <label class="form-label">Street Address</label>
+          <input class="form-input" type="text" id="address" placeholder="123 Main St"/>
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:14px;">
+        <div class="form-group">
+          <label class="form-label">City</label>
+          <input class="form-input" type="text" id="city" placeholder="San Francisco"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ZIP Code</label>
+          <input class="form-input" type="text" id="zip" placeholder="94102"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment -->
+    <div class="form-block">
+      <div class="form-block-title">Payment Details</div>
+      <div class="form-group">
+        <label class="form-label">Card Information</label>
+        <div class="stripe-element" id="cardElement"></div>
+      </div>
+      <div class="error-msg" id="cardError"></div>
+    </div>
+
+    <!-- Cancellation policy -->
+    <div class="policy-box">
+      <div class="policy-title">Cancellation &amp; Payment Policy</div>
+      <div class="policy-row"><div class="policy-dot"></div><span><strong>50% deposit</strong> charged today · remaining 50% collected 48 hrs before pickup</span></div>
+      <div class="policy-row"><div class="policy-dot"></div><span><strong>5+ days before event</strong> — 100% refund</span></div>
+      <div class="policy-row"><div class="policy-dot"></div><span><strong>2–4 days before event</strong> — 50% refund</span></div>
+      <div class="policy-row"><div class="policy-dot"></div><span><strong>Within 48 hours</strong> — no refund</span></div>
+      <div class="policy-row"><div class="policy-dot"></div><span><strong>Orders within 48 hrs of event</strong> — charged in full, non-refundable</span></div>
+      <div class="policy-row"><div class="policy-dot"></div><span>A <strong>$175 damage hold</strong> will be pre-authorized and released after safe return</span></div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: Order Summary -->
+  <div class="order-summary">
+    <div class="summary-title">Order Summary</div>
+    <div class="summary-items" id="summaryItems"></div>
+    <div class="summary-divider"></div>
+    <div id="summaryRows"></div>
+    <div class="summary-row total">
+      <strong>Deposit Due Today</strong>
+      <strong id="depositDue">$0.00</strong>
+    </div>
+    <div class="damage-note">
+      A <strong>$175.00 damage hold</strong> will also be pre-authorized on your card. This is not a charge — it will be released within 5–7 days after your items are returned in good condition.
+    </div>
+    <button class="pay-btn" id="payBtn" onclick="handlePayment()">Pay Deposit Now</button>
+    <div class="secure-note">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      Secured by Stripe · SSL Encrypted
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ── Stripe init
+  const stripe = Stripe('pk_test_51TTsbJBkzKhOe4rJSM3zq1akSEt6pXNEVPAIvnbICijGJS9qZfGB54WfeSpgcox8KFgOPYiJe0fCPoQRW3kfYxmp003NSH3Aan');
+  const elements = stripe.elements();
+  const cardElement = elements.create('card', {
+    style: {
+      base: {
+        fontFamily: "'Jost', sans-serif",
+        fontWeight: '300',
+        fontSize: '15px',
+        color: '#3a2e28',
+        '::placeholder': { color: '#a99589' }
+      }
+    }
+  });
+  cardElement.mount('#cardElement');
+  cardElement.on('focus', () => document.getElementById('cardElement').classList.add('focused'));
+  cardElement.on('blur',  () => document.getElementById('cardElement').classList.remove('focused'));
+  cardElement.on('change', e => {
+    document.getElementById('cardError').textContent = e.error ? e.error.message : '';
+  });
+
+  // ── Tax rate for Bay Area CA (~9.875% average)
+  const TAX_RATE = 0.09875;
+  const DAMAGE_HOLD = 175.00;
+
+  // ── Load cart and render summary
+  const cart = JSON.parse(localStorage.getItem('tbb_cart') || '[]');
+
+  function renderSummary() {
+    const itemsEl   = document.getElementById('summaryItems');
+    const rowsEl    = document.getElementById('summaryRows');
+    const depositEl = document.getElementById('depositDue');
+
+    if (cart.length === 0) {
+      itemsEl.innerHTML = '<p style="font-size:0.75rem;color:var(--text-soft);">Your cart is empty.</p>';
+      return;
+    }
+
+    let subtotal = 0;
+
+    cart.forEach(item => {
+      subtotal += item.price * item.qty;
+      const div = document.createElement('div');
+      div.className = 'summary-item';
+      div.innerHTML = `
+        <div class="summary-item-img">${item.imgHTML}</div>
+        <div class="summary-item-info">
+          <div class="summary-item-name">${item.title}</div>
+          <div class="summary-item-variant">${item.variant} · Qty ${item.qty}</div>
+          <div class="summary-item-dates">
+            ${item.pickup !== 'Select date & time' ? `📅 ${item.pickup}` : ''}<br>
+            ${item.ret !== 'Select date & time' ? `↩ ${item.ret}` : ''}
+          </div>
+        </div>
+        <div class="summary-item-price">$${(item.price * item.qty).toFixed(2)}</div>`;
+      itemsEl.appendChild(div);
+    });
+
+    // Check if order is within 48hrs — charge full amount
+    const isUrgent = isWithin48Hours();
+    const depositRate = isUrgent ? 1.0 : 0.5;
+    const depositLabel = isUrgent ? 'Full Payment (within 48hrs)' : '50% Deposit';
+
+    const tax      = subtotal * TAX_RATE;
+    const deposit  = (subtotal + tax) * depositRate;
+
+    rowsEl.innerHTML = `
+      <div class="summary-row"><span>Subtotal</span><span>$${subtotal.toFixed(2)}</span></div>
+      <div class="summary-row"><span>CA Sales Tax (9.875%)</span><span>$${tax.toFixed(2)}</span></div>
+      <div class="summary-row highlight"><span>${depositLabel}</span><span>$${deposit.toFixed(2)}</span></div>`;
+
+    depositEl.textContent = '$' + deposit.toFixed(2);
+
+    if (isUrgent) {
+      const notice = document.createElement('div');
+      notice.style = 'font-size:0.65rem;color:#c0392b;margin-top:8px;line-height:1.6;';
+      notice.textContent = '⚠ This order is within 48 hours of your event and is charged in full. Non-refundable.';
+      rowsEl.appendChild(notice);
+    }
+
+    // Update pay button
+    document.getElementById('payBtn').textContent = `Pay $${deposit.toFixed(2)} Now`;
+  }
+
+  function isWithin48Hours() {
+    // Check if any item's pickup date is within 48 hours
+    for (const item of cart) {
+      if (item.pickupDate) {
+        const pickup = new Date(item.pickupDate.y, item.pickupDate.m, item.pickupDate.d);
+        const now = new Date();
+        const diffHrs = (pickup - now) / (1000 * 60 * 60);
+        if (diffHrs <= 48) return true;
+      }
+    }
+    return false;
+  }
+
+  renderSummary();
+
+  // ── ZIP codes within ~50 miles of Fremont, CA (94536)
+  // Covers: Fremont, Oakland, San Jose, San Francisco, Berkeley, Hayward,
+  // San Mateo, Santa Clara, Sunnyvale, Palo Alto, Walnut Creek, Concord,
+  // San Ramon, Dublin, Pleasanton, Livermore, San Leandro, Alameda + more
+  const VALID_ZIPS = new Set([
+    // Fremont
+    '94536','94537','94538','94539','94555',
+    // Oakland
+    '94601','94602','94603','94604','94605','94606','94607','94608','94609',
+    '94610','94611','94612','94613','94614','94615','94617','94618','94619',
+    '94620','94621','94622','94623','94624','94649','94659','94660','94661','94662',
+    // Berkeley
+    '94701','94702','94703','94704','94705','94706','94707','94708','94709','94710','94712','94720',
+    // Hayward
+    '94540','94541','94542','94543','94544','94545','94546',
+    // San Leandro
+    '94577','94578','94579',
+    // Alameda
+    '94501','94502',
+    // San Jose
+    '95101','95102','95103','95106','95108','95109','95110','95111','95112',
+    '95113','95115','95116','95117','95118','95119','95120','95121','95122',
+    '95123','95124','95125','95126','95127','95128','95129','95130','95131',
+    '95132','95133','95134','95135','95136','95138','95139','95140','95141',
+    '95148','95150','95151','95152','95153','95154','95155','95156','95157',
+    '95158','95159','95160','95161','95164','95170','95172','95173','95190',
+    // Santa Clara
+    '95050','95051','95052','95053','95054','95055','95056',
+    // Sunnyvale
+    '94085','94086','94087','94088','94089',
+    // Mountain View
+    '94040','94041','94042','94043',
+    // Palo Alto
+    '94301','94302','94303','94304','94305','94306',
+    // Redwood City
+    '94061','94062','94063','94064','94065',
+    // San Mateo
+    '94401','94402','94403','94404',
+    // Foster City
+    '94404',
+    // Burlingame
+    '94010',
+    // San Francisco
+    '94102','94103','94104','94105','94107','94108','94109','94110','94111',
+    '94112','94114','94115','94116','94117','94118','94119','94120','94121',
+    '94122','94123','94124','94125','94126','94127','94128','94129','94130',
+    '94131','94132','94133','94134','94137','94139','94140','94141','94142',
+    '94143','94144','94145','94146','94147','94151','94158','94159','94160',
+    '94161','94163','94164','94172','94177','94188',
+    // Dublin / Pleasanton / Livermore
+    '94568','94566','94550','94551',
+    // San Ramon
+    '94582','94583',
+    // Danville
+    '94526',
+    // Walnut Creek
+    '94595','94596','94597','94598',
+    // Concord
+    '94518','94519','94520','94521','94522','94523','94524',
+    // Richmond
+    '94801','94802','94803','94804','94805','94806','94807','94808','94820','94850',
+    // Milpitas
+    '95035','95036',
+    // Union City
+    '94587',
+    // Newark
+    '94560',
+    // Castro Valley
+    '94546',
+    // San Lorenzo
+    '94580',
+    // Daly City
+    '94014','94015','94016','94017',
+    // South San Francisco
+    '94080',
+    // San Bruno
+    '94066',
+    // Millbrae
+    '94030',
+    // Belmont
+    '94002',
+    // San Carlos
+    '94070',
+    // Half Moon Bay (just outside 50mi but commonly served)
+    '94019',
+    // Cupertino
+    '95014','95015',
+    // Los Gatos
+    '95030','95031','95032','95033',
+    // Campbell
+    '95008','95009',
+    // Los Altos
+    '94022','94023','94024',
+    // Menlo Park
+    '94025','94026',
+    // East Palo Alto
+    '94303',
+    // Antioch
+    '94509','94510','94531',
+    // Pittsburg
+    '94565',
+    // Brentwood
+    '94513',
+    // Moraga / Orinda / Lafayette
+    '94556','94563','94549',
+  ]);
+
+  function isZipInRange(zip) {
+    return VALID_ZIPS.has(zip.trim());
+  }
+
+  // ── Handle payment
+  async function handlePayment() {
+    const btn = document.getElementById('payBtn');
+    const errorEl = document.getElementById('cardError');
+
+    // Basic validation
+    const firstName = document.getElementById('firstName').value.trim();
+    const lastName  = document.getElementById('lastName').value.trim();
+    const email     = document.getElementById('email').value.trim();
+    const phone     = document.getElementById('phone').value.trim();
+    const address   = document.getElementById('address').value.trim();
+    const city      = document.getElementById('city').value.trim();
+    const zip       = document.getElementById('zip').value.trim();
+
+    if (!firstName || !lastName || !email || !phone || !address || !city || !zip) {
+      errorEl.textContent = 'Please fill in all fields before proceeding.';
+      return;
+    }
+
+    // ── Delivery radius check
+    if (!isZipInRange(zip)) {
+      errorEl.textContent = 'We currently serve the greater Bay Area within 50 miles of Fremont, CA. Unfortunately your delivery address falls outside our service area.';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Processing...';
+    errorEl.textContent = '';
+
+    try {
+      // Call our Netlify function to create a payment intent
+      const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+      const tax = subtotal * TAX_RATE;
+      const isUrgent = isWithin48Hours();
+      const depositRate = isUrgent ? 1.0 : 0.5;
+      const depositAmount = Math.round((subtotal + tax) * depositRate * 100); // in cents
+
+      const res = await fetch('/.netlify/functions/create-payment-intent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: depositAmount,
+          currency: 'usd',
+          email,
+          name: `${firstName} ${lastName}`,
+          description: `The Backdrop Bar — ${isUrgent ? 'Full Payment' : '50% Deposit'}`,
+          metadata: {
+            customer_email: email,
+            customer_phone: phone,
+            delivery_address: `${address}, ${city}, CA ${zip}`,
+            cart_items: JSON.stringify(cart.map(i => `${i.title} x${i.qty}`))
+          }
+        })
+      });
+
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      const { error: stripeError } = await stripe.confirmCardPayment(data.clientSecret, {
+        payment_method: {
+          card: cardElement,
+          billing_details: {
+            name: `${firstName} ${lastName}`,
+            email,
+            phone,
+            address: { line1: address, city, state: 'CA', postal_code: zip, country: 'US' }
+          }
+        }
+      });
+
+      if (stripeError) {
+        errorEl.textContent = stripeError.message;
+        btn.disabled = false;
+        btn.textContent = `Pay $${((subtotal + tax) * depositRate).toFixed(2)} Now`;
+        return;
+      }
+
+      // Success — clear cart and show confirmation
+      localStorage.removeItem('tbb_cart');
+      document.getElementById('checkoutPage').style.display = 'none';
+      document.getElementById('successScreen').classList.add('show');
+
+    } catch (err) {
+      errorEl.textContent = 'Something went wrong. Please try again.';
+      btn.disabled = false;
+      btn.textContent = 'Pay Deposit Now';
+    }
+  }
+</script>
+
+</body>
+</html>

@@ -729,10 +729,47 @@
     const timeStr = `${parseInt(h)}:${min} ${ampm}`;
     const display = `${dateStr} at ${timeStr}`;
 
+    // Convert selected time to comparable minutes
+    let hour24 = parseInt(h);
+    if (ampm === 'PM' && hour24 !== 12) hour24 += 12;
+    if (ampm === 'AM' && hour24 === 12) hour24 = 0;
+    const selectedMins = new Date(selectedDay.y, selectedDay.m, selectedDay.d, hour24, parseInt(min)).getTime();
+
+    // For return picker — must be at least 15 min after pickup
+    if (activePicker === 'return' && pickupDate) {
+      const pickupHourVal = document.getElementById('picker-hour').value;
+      // Reconstruct pickup datetime from stored pickupDate
+      const pickupDT = new Date(pickupDate.y, pickupDate.m, pickupDate.d);
+      // Parse pickup time from display string
+      const pickupDisplay = document.getElementById('pickup-display').textContent;
+      const pickupTimeParsed = pickupDisplay.match(/at (\d+):(\d+) (AM|PM)/);
+      if (pickupTimeParsed) {
+        let ph = parseInt(pickupTimeParsed[1]);
+        const pm = parseInt(pickupTimeParsed[2]);
+        const pa = pickupTimeParsed[3];
+        if (pa === 'PM' && ph !== 12) ph += 12;
+        if (pa === 'AM' && ph === 12) ph = 0;
+        pickupDT.setHours(ph, pm, 0, 0);
+      }
+      const minReturn = pickupDT.getTime() + 15 * 60 * 1000;
+      if (selectedMins < minReturn) {
+        document.getElementById('rental-duration').textContent = 'Return time must be at least 15 minutes after pickup.';
+        document.getElementById('rental-duration').style.color = '#c9705a';
+        return;
+      }
+    }
+
     if (activePicker === 'pickup') {
       pickupDate = { ...selectedDay };
       document.getElementById('pickup-display').textContent = display;
       document.getElementById('pickup-field').classList.add('filled');
+      // Reset return if it's now too early
+      if (returnDate) {
+        returnDate = null;
+        document.getElementById('return-display').textContent = 'Select date & time';
+        document.getElementById('return-field').classList.remove('filled');
+        document.getElementById('rental-duration').textContent = '';
+      }
     } else {
       returnDate = { ...selectedDay };
       document.getElementById('return-display').textContent = display;

@@ -332,33 +332,35 @@
 </div>
 
 <script>
-  // ── Address autocomplete using OpenStreetMap Nominatim (free, no API key)
+  // ── Address autocomplete — prefix match on typed characters
   let suggestTimer = null;
 
   async function fetchSuggestions(val) {
     const box = document.getElementById('suggestions-box');
     if (!val || val.length < 1) { box.style.display = 'none'; return; }
-
     clearTimeout(suggestTimer);
     suggestTimer = setTimeout(async () => {
       try {
-        const query = encodeURIComponent(val + ' California');
+        // Use Photon API (OpenStreetMap-based, returns results in typed order)
         const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${query}&format=json&addressdetails=1&limit=6&countrycodes=us&viewbox=-122.8,38.5,-121.0,36.8&bounded=1`,
-          { headers: { 'Accept-Language': 'en', 'User-Agent': 'TheBackdropBar/1.0' } }
+          `https://photon.komoot.io/api/?q=${encodeURIComponent(val)}&limit=6&bbox=-122.8,36.8,-121.0,38.5&lang=en`
         );
         const data = await res.json();
         box.innerHTML = '';
-
-        if (!data || data.length === 0) { box.style.display = 'none'; return; }
+        const features = data.features || [];
+        if (!features.length) { box.style.display = 'none'; return; }
 
         box.style.display = 'block';
-        data.forEach(place => {
-          const a = place.address;
-          const street = [a.house_number, a.road].filter(Boolean).join(' ');
-          const city   = a.city || a.town || a.village || a.suburb || '';
-          const zip    = a.postcode || '';
-          const label  = place.display_name.split(',').slice(0, 3).join(',').trim();
+        features.forEach(f => {
+          const p = f.properties;
+          // Only show results that start with what user typed (prefix match)
+          const street = [p.housenumber, p.street || p.name].filter(Boolean).join(' ');
+          const city   = p.city || p.town || p.village || '';
+          const zip    = p.postcode || '';
+          const label  = [street, city, p.state].filter(Boolean).join(', ');
+
+          if (!label.toLowerCase().startsWith(val.toLowerCase()) &&
+              !street.toLowerCase().startsWith(val.toLowerCase())) return;
 
           const item = document.createElement('div');
           item.style = 'padding:11px 16px;font-size:0.75rem;color:#3a2e28;cursor:pointer;border-bottom:1px solid rgba(201,180,154,0.15);line-height:1.4;';
@@ -366,21 +368,40 @@
           item.onmouseover = () => item.style.background = 'rgba(201,180,154,0.1)';
           item.onmouseout  = () => item.style.background = '';
           item.onclick = () => {
-            document.getElementById('address').value = street || label;
+            document.getElementById('address').value = street;
             document.getElementById('city').value    = city;
             document.getElementById('zip').value     = zip;
             box.style.display = 'none';
+            clearFieldError('address');
           };
           box.appendChild(item);
         });
+        if (!box.children.length) box.style.display = 'none';
       } catch(e) { box.style.display = 'none'; }
-    }, 300);
+    }, 200);
   }
 
   document.addEventListener('click', e => {
     if (!e.target.closest('#address') && !e.target.closest('#suggestions-box')) {
       document.getElementById('suggestions-box').style.display = 'none';
     }
+  });
+
+  // ── Real-time field clearing
+  ['firstName','lastName','email','phone','address','city','zip'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', () => clearFieldError(id));
+  });
+
+  // ── Phone: auto-format and limit to 10 digits
+  document.getElementById('phone').addEventListener('input', function() {
+    let digits = this.value.replace(/\D/g,'').slice(0,11);
+    if (digits.length <= 10) {
+      if (digits.length > 6) digits = `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+      else if (digits.length > 3) digits = `(${digits.slice(0,3)}) ${digits.slice(3)}`;
+      else if (digits.length) digits = `(${digits}`;
+    }
+    this.value = digits;
   });
 
   // ── Stripe init
@@ -530,12 +551,61 @@
 
   function isZipInRange(zip) { return VALID_ZIPS.has(zip.trim()); }
 
+  // ── Field error helpers
+  function showFieldError(fieldId, msg) {
+    const field = document.getElementById(fieldId);
+    field.style.borderColor = '#c9705a';
+    let err = field.parentElement.querySelector('.field-err');
+    if (!err) {
+      err = document.createElement('div');
+      err.className = 'field-err';
+      err.style = 'font-size:0.62rem;color:#c9705a;margin-top:4px;';
+      field.parentElement.appendChild(err);
+    }
+    err.textContent = msg;
+  }
+
+  function clearFieldError(fieldId) {
+    const field = document.getElementById(fieldId);
+    if (!field) return;
+    field.style.borderColor = '';
+    const err = field.parentElement.querySelector('.field-err');
+    if (err) err.textContent = '';
+  }
+
+  function clearAllErrors() {
+    document.querySelectorAll('.field-err').forEach(e => e.textContent = '');
+    document.querySelectorAll('.form-input').forEach(f => f.style.borderColor = '');
+    // Also clear section-level errors
+    document.querySelectorAll('.section-err').forEach(e => e.remove());
+  }
+
+  function showSectionError(blockEl, msg) {
+    let err = blockEl.querySelector('.section-err');
+    if (!err) {
+      err = document.createElement('div');
+      err.className = 'section-err';
+      err.style = 'font-size:0.65rem;color:#c9705a;margin-top:12px;padding:10px 14px;background:rgba(192,57,43,0.06);border-radius:6px;border:1px solid rgba(192,57,43,0.15);';
+      blockEl.appendChild(err);
+    }
+    err.textContent = msg;
+  }
+
+  function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+  }
+
+  function cleanPhone(phone) {
+    return phone.replace(/\D/g, '');
+  }
+
   // ── Handle payment
   async function handlePayment() {
     const btn = document.getElementById('payBtn');
     const errorEl = document.getElementById('cardError');
+    clearAllErrors();
+    let hasError = false;
 
-    // Basic validation
     const firstName = document.getElementById('firstName').value.trim();
     const lastName  = document.getElementById('lastName').value.trim();
     const email     = document.getElementById('email').value.trim();
@@ -544,8 +614,41 @@
     const city      = document.getElementById('city').value.trim();
     const zip       = document.getElementById('zip').value.trim();
 
-    if (!firstName || !lastName || !email || !phone || !address || !city || !zip) {
-      errorEl.textContent = 'Please fill in all fields before proceeding.';
+    // ── Contact section validation
+    const contactBlock = document.querySelectorAll('.form-block')[0];
+    const contactErrors = [];
+    if (!firstName) { showFieldError('firstName', 'Required'); hasError = true; }
+    if (!lastName)  { showFieldError('lastName',  'Required'); hasError = true; }
+    if (!email) {
+      showFieldError('email', 'Required'); hasError = true;
+    } else if (!isValidEmail(email)) {
+      showFieldError('email', 'Please enter a valid email address'); hasError = true;
+    }
+    if (!phone) {
+      showFieldError('phone', 'Required'); hasError = true;
+    } else if (cleanPhone(phone).length < 10) {
+      showFieldError('phone', 'Phone number must be at least 10 digits'); hasError = true;
+    } else if (cleanPhone(phone).length > 11) {
+      showFieldError('phone', 'Phone number is too long — please check and try again'); hasError = true;
+    }
+    if (!firstName || !lastName || !email || !phone || !isValidEmail(email) || cleanPhone(phone).length < 10 || cleanPhone(phone).length > 11) {
+      showSectionError(contactBlock, 'Please fill in all fields in this section before proceeding.');
+    }
+
+    // ── Address section validation
+    const addressBlock = document.querySelectorAll('.form-block')[1];
+    const addressErrors = [];
+    if (!address) { showFieldError('address', 'Required'); hasError = true; addressErrors.push(true); }
+    if (!city)    { showFieldError('city',    'Required'); hasError = true; addressErrors.push(true); }
+    if (!zip)     { showFieldError('zip',     'Required'); hasError = true; addressErrors.push(true); }
+    if (addressErrors.length) {
+      showSectionError(addressBlock, 'Please fill in all fields in this section before proceeding.');
+    }
+
+    if (hasError) {
+      // Scroll to first error
+      const firstErr = document.querySelector('.field-err:not(:empty), .section-err');
+      if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
 

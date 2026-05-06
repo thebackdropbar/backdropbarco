@@ -393,14 +393,12 @@
     if (el) el.addEventListener('input', () => clearFieldError(id));
   });
 
-  // ── Phone: auto-format and limit to 10 digits
+  // ── Phone: auto-format and limit to exactly 10 digits
   document.getElementById('phone').addEventListener('input', function() {
-    let digits = this.value.replace(/\D/g,'').slice(0,11);
-    if (digits.length <= 10) {
-      if (digits.length > 6) digits = `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
-      else if (digits.length > 3) digits = `(${digits.slice(0,3)}) ${digits.slice(3)}`;
-      else if (digits.length) digits = `(${digits}`;
-    }
+    let digits = this.value.replace(/\D/g,'').slice(0,10);
+    if (digits.length > 6) digits = `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+    else if (digits.length > 3) digits = `(${digits.slice(0,3)}) ${digits.slice(3)}`;
+    else if (digits.length) digits = `(${digits}`;
     this.value = digits;
   });
 
@@ -418,11 +416,19 @@
       }
     }
   });
+  let cardComplete = false;
   cardElement.mount('#cardElement');
   cardElement.on('focus', () => document.getElementById('cardElement').classList.add('focused'));
   cardElement.on('blur',  () => document.getElementById('cardElement').classList.remove('focused'));
   cardElement.on('change', e => {
-    document.getElementById('cardError').textContent = e.error ? e.error.message : '';
+    cardComplete = e.complete;
+    const cardErr = document.getElementById('cardError');
+    cardErr.textContent = e.error ? e.error.message : '';
+    if (e.complete) document.getElementById('cardElement').style.borderColor = '';
+    // Clear card section error when user starts typing
+    const cardBlock = document.querySelectorAll('.form-block')[2];
+    const sectionErr = cardBlock?.querySelector('.section-err');
+    if (sectionErr && e.complete) sectionErr.remove();
   });
 
   // ── Tax rate for Bay Area CA (~9.875% average)
@@ -465,13 +471,11 @@
     const isUrgent = isWithin48Hours();
     const depositRate = isUrgent ? 1.0 : 0.5;
     const tax      = subtotal * TAX_RATE;
-    const deliveryFee = 25.00; // estimated, updated when ZIP entered
-    const orderTotal = subtotal + deliveryFee + tax;
+    const orderTotal = subtotal + tax;
     const deposit  = orderTotal * depositRate;
 
     rowsEl.innerHTML = `
       <div class="summary-row"><span>Subtotal</span><span>$${subtotal.toFixed(2)}</span></div>
-      <div class="summary-row"><span>Delivery (est. 10 mi × $2.50/mi)</span><span>$${deliveryFee.toFixed(2)}</span></div>
       <div class="summary-row"><span>CA Sales Tax (9.875%)</span><span>$${tax.toFixed(2)}</span></div>
       <div class="summary-row total" style="margin-top:8px;"><strong>Order Total</strong><strong>$${orderTotal.toFixed(2)}</strong></div>`;
 
@@ -626,12 +630,10 @@
     }
     if (!phone) {
       showFieldError('phone', 'Required'); hasError = true;
-    } else if (cleanPhone(phone).length < 10) {
-      showFieldError('phone', 'Phone number must be at least 10 digits'); hasError = true;
-    } else if (cleanPhone(phone).length > 11) {
-      showFieldError('phone', 'Phone number is too long — please check and try again'); hasError = true;
+    } else if (cleanPhone(phone).length !== 10) {
+      showFieldError('phone', 'Please enter a valid 10-digit phone number'); hasError = true;
     }
-    if (!firstName || !lastName || !email || !phone || !isValidEmail(email) || cleanPhone(phone).length < 10 || cleanPhone(phone).length > 11) {
+    if (!firstName || !lastName || !email || !phone || !isValidEmail(email) || cleanPhone(phone).length !== 10) {
       showSectionError(contactBlock, 'Please fill in all fields in this section before proceeding.');
     }
 
@@ -643,6 +645,14 @@
     if (!zip)     { showFieldError('zip',     'Required'); hasError = true; addressErrors.push(true); }
     if (addressErrors.length) {
       showSectionError(addressBlock, 'Please fill in all fields in this section before proceeding.');
+    }
+
+    // ── Card section validation
+    const cardBlock = document.querySelectorAll('.form-block')[2];
+    if (!cardComplete) {
+      hasError = true;
+      showSectionError(cardBlock, 'Please enter your complete card details before proceeding.');
+      document.getElementById('cardElement').style.borderColor = '#c9705a';
     }
 
     if (hasError) {

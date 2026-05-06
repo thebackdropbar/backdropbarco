@@ -299,11 +299,10 @@
     <!-- Cancellation policy -->
     <div class="policy-box">
       <div class="policy-title">Cancellation &amp; Payment Policy</div>
-      <div class="policy-row"><div class="policy-dot"></div><span><strong>50% deposit</strong> charged today · remaining 50% collected 48 hrs before pickup</span></div>
+      <div class="policy-row"><div class="policy-dot"></div><span><strong>Full payment</strong> charged at checkout</span></div>
       <div class="policy-row"><div class="policy-dot"></div><span><strong>5+ days before event</strong> — 100% refund</span></div>
       <div class="policy-row"><div class="policy-dot"></div><span><strong>2–4 days before event</strong> — 50% refund</span></div>
       <div class="policy-row"><div class="policy-dot"></div><span><strong>Within 48 hours</strong> — no refund</span></div>
-      <div class="policy-row"><div class="policy-dot"></div><span><strong>Orders within 48 hrs of event</strong> — charged in full, non-refundable</span></div>
       <div class="policy-row"><div class="policy-dot"></div><span>A <strong>$175 damage hold</strong> will be pre-authorized and released after safe return</span></div>
     </div>
 
@@ -316,7 +315,7 @@
     <div class="summary-divider"></div>
     <div id="summaryRows"></div>
     <div class="summary-row total">
-      <strong>Deposit Due Today</strong>
+      <strong>Total Due Today</strong>
       <strong id="depositDue">$0.00</strong>
     </div>
     <div class="damage-note">
@@ -468,37 +467,16 @@
       itemsEl.appendChild(div);
     });
 
-    const isUrgent = isWithin48Hours();
-    const depositRate = isUrgent ? 1.0 : 0.5;
     const tax      = subtotal * TAX_RATE;
     const orderTotal = subtotal + tax;
-    const deposit  = orderTotal * depositRate;
 
     rowsEl.innerHTML = `
       <div class="summary-row"><span>Subtotal</span><span>$${subtotal.toFixed(2)}</span></div>
       <div class="summary-row"><span>CA Sales Tax (9.875%)</span><span>$${tax.toFixed(2)}</span></div>
-      <div class="summary-row total" style="margin-top:8px;"><strong>Order Total</strong><strong>$${orderTotal.toFixed(2)}</strong></div>`;
+      <div class="summary-row total" style="margin-top:8px;"><strong>Total Due Today</strong><strong>$${orderTotal.toFixed(2)}</strong></div>`;
 
-    // Deposit callout box
-    const depositBox = document.createElement('div');
-    depositBox.style = 'margin-top:14px;background:rgba(245,238,230,0.7);border:1px solid rgba(201,180,154,0.3);border-radius:8px;padding:12px 14px;';
-    depositBox.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-        <span style="font-size:0.68rem;letter-spacing:0.12em;color:#7a6a60;">${isUrgent ? 'Full Payment (within 48hrs)' : '50% Deposit Due Today'}</span>
-        <span style="font-size:1rem;font-weight:400;color:#3a2e28;">$${deposit.toFixed(2)}</span>
-      </div>
-      <div style="font-size:0.6rem;color:#a99589;line-height:1.6;">${isUrgent ? 'Charged in full — non-refundable.' : `The remaining $${deposit.toFixed(2)} will be collected 48 hours before your pickup date.`}</div>`;
-    rowsEl.appendChild(depositBox);
-
-    if (isUrgent) {
-      const notice = document.createElement('div');
-      notice.style = 'font-size:0.65rem;color:#c0392b;margin-top:8px;line-height:1.6;';
-      notice.textContent = '⚠ This order is within 48 hours of your event and is charged in full. Non-refundable.';
-      rowsEl.appendChild(notice);
-    }
-
-    depositEl.textContent = '$' + deposit.toFixed(2);
-    document.getElementById('payBtn').textContent = `Pay $${deposit.toFixed(2)} Now`;
+    depositEl.textContent = '$' + orderTotal.toFixed(2);
+    document.getElementById('payBtn').textContent = `Pay $${orderTotal.toFixed(2)} Now`;
   }
 
   function isWithin48Hours() {
@@ -676,15 +654,13 @@
       // Call our Netlify function to create a payment intent
       const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
       const tax = subtotal * TAX_RATE;
-      const isUrgent = isWithin48Hours();
-      const depositRate = isUrgent ? 1.0 : 0.5;
-      const depositAmount = Math.round((subtotal + tax) * depositRate * 100); // in cents
+      const totalAmount = Math.round((subtotal + tax) * 100); // full amount in cents
 
       const res = await fetch('/.netlify/functions/create-payment-intent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount: depositAmount,
+          amount: totalAmount,
           currency: 'usd',
           email,
           name: `${firstName} ${lastName}`,

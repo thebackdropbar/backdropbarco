@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Manage Reservation — The Backdrop Bar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:wght@300;400&family=Jost:wght@200;300;400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --cream: #fdf8f3; --parchment: #f5ede1; --blush: #e8cfc2;
+      --warm-tan: #c9b49a; --text-dark: #3a2e28; --text-mid: #7a6a60; --text-soft: #a99589;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--cream); color: var(--text-dark); font-family: 'Jost', sans-serif; font-weight: 300; min-height: 100vh; }
+
+    /* ── NAV ── */
+    .top-nav {
+      display: flex; align-items: center; justify-content: center;
+      padding: 16px 40px;
+      background: var(--cream);
+      border-bottom: 1px solid rgba(201,180,154,0.25);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .top-nav-logo { font-family: 'Great Vibes', cursive; font-size: 1.6rem; color: var(--text-dark); text-decoration: none; }
+    .top-nav-back {
+      position: absolute; left: 40px;
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--text-soft); text-decoration: none; transition: color 0.2s;
+    }
+    .top-nav-back:hover { color: var(--text-dark); }
+    .top-nav-back svg { width: 14px; height: 14px; }
+
+    /* ── LAYOUT ── */
+    .page { max-width: 600px; margin: 0 auto; padding: 48px 24px 80px; }
+
+    /* ── HERO ── */
+    .hero { text-align: center; margin-bottom: 36px; }
+    .hero-eyebrow { font-size: 0.62rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--text-soft); margin-bottom: 8px; }
+    .hero-title { font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 300; color: var(--text-dark); margin-bottom: 8px; }
+    .hero-line { width: 32px; height: 1px; background: var(--warm-tan); margin: 12px auto; }
+    .hero-sub { font-size: 0.75rem; color: var(--text-soft); line-height: 1.8; max-width: 420px; margin: 0 auto; }
+
+    /* ── SECTIONS ── */
+    .section { margin-bottom: 24px; }
+    .section-label { font-size: 0.62rem; letter-spacing: 0.24em; text-transform: uppercase; color: var(--text-soft); margin-bottom: 12px; }
+
+    /* ── CARDS ── */
+    .card { background: white; border: 1px solid rgba(201,180,154,0.25); border-radius: 14px; overflow: hidden; }
+    .card-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid rgba(201,180,154,0.15); }
+    .card-row:last-child { border-bottom: none; }
+    .row-label { font-size: 0.72rem; color: var(--text-mid); }
+    .row-val { font-size: 0.75rem; color: var(--text-dark); text-align: right; }
+
+    /* ── BOOKING ITEM ── */
+    .booking-item { display: flex; gap: 16px; align-items: center; padding: 16px 20px; }
+    .booking-img { width: 60px; height: 74px; border-radius: 8px; background: linear-gradient(135deg, #f0e4d8, #e8d4c4); flex-shrink: 0; }
+    .booking-name { font-family: 'Cormorant Garamond', serif; font-size: 1.05rem; font-weight: 400; color: var(--text-dark); margin-bottom: 3px; }
+    .booking-variant { font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-soft); margin-bottom: 8px; }
+    .status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; background: rgba(29,158,117,0.1); color: #0f6e56; border-radius: 20px; font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; }
+    .status-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+    /* ── DATE PICKERS ── */
+    .date-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 16px 20px; }
+    .date-field-label { font-size: 0.6rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-soft); margin-bottom: 6px; }
+    .date-field {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 13px;
+      border: 1px solid rgba(201,180,154,0.45);
+      border-radius: 8px;
+      cursor: pointer;
+      background: white;
+      transition: border-color 0.2s;
+      user-select: none;
+    }
+    .date-field:hover { border-color: var(--warm-tan); }
+    .date-field.filled { border-color: var(--warm-tan); }
+    .date-field-text { font-size: 0.72rem; color: var(--text-mid); }
+    .date-field.filled .date-field-text { color: var(--text-dark); }
+    .date-field svg { width: 14px; height: 14px; stroke: var(--text-soft); flex-shrink: 0; }
+    .duration-note { padding: 0 20px 14px; font-size: 0.65rem; color: var(--text-soft); min-height: 20px; }
+
+    /* ── CALENDAR POPUP ── */
+    .picker-overlay {
+      display: none; position: fixed; inset: 0; z-index: 500;
+      background: rgba(58,46,40,0.35);
+      align-items: center; justify-content: center;
+    }
+    .picker-overlay.open { display: flex; }
+    .picker-popup {
+      background: white; border-radius: 16px; padding: 24px;
+      width: 300px; max-width: 92vw;
+      box-shadow: 0 12px 48px rgba(58,46,40,0.15);
+    }
+    .picker-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .picker-title { font-size: 0.62rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--text-soft); }
+    .picker-close { background: none; border: none; cursor: pointer; font-size: 1.1rem; color: var(--text-soft); }
+    .cal-nav-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .cal-nav-btn { background: none; border: none; cursor: pointer; font-size: 1.1rem; color: var(--text-mid); padding: 4px 10px; }
+    .cal-month-label { font-family: 'Cormorant Garamond', serif; font-size: 1rem; font-weight: 300; color: var(--text-dark); }
+    .cal-days-header { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; margin-bottom: 6px; }
+    .cal-day-lbl { text-align: center; font-size: 0.58rem; letter-spacing: 0.1em; color: var(--text-soft); padding: 3px 0; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; margin-bottom: 16px; }
+    .cal-day { text-align: center; padding: 7px 2px; font-size: 0.75rem; border-radius: 6px; cursor: pointer; color: var(--text-mid); transition: background 0.15s; }
+    .cal-day:hover:not(.disabled):not(.empty) { background: rgba(201,180,154,0.2); }
+    .cal-day.selected { background: var(--text-dark); color: white; }
+    .cal-day.today { color: var(--text-dark); font-weight: 400; }
+    .cal-day.disabled { color: rgba(201,180,154,0.4); cursor: default; }
+    .cal-day.empty { cursor: default; }
+    .picker-confirm {
+      width: 100%; padding: 13px; background: var(--text-dark); color: white;
+      border: none; border-radius: 10px; font-family: 'Jost', sans-serif;
+      font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer;
+    }
+
+    /* ── WARNING ── */
+    .warning-box {
+      display: none;
+      background: rgba(186,117,23,0.08);
+      border: 1px solid rgba(186,117,23,0.25);
+      border-radius: 8px; padding: 10px 14px;
+      font-size: 0.68rem; color: #854f0b; line-height: 1.7;
+      margin-bottom: 20px;
+    }
+
+    /* ── BUTTONS ── */
+    .btn-primary {
+      width: 100%; padding: 15px;
+      background: var(--text-dark); color: white;
+      border: none; border-radius: 10px;
+      font-family: 'Jost', sans-serif; font-size: 0.72rem;
+      letter-spacing: 0.22em; text-transform: uppercase;
+      cursor: pointer; margin-bottom: 10px;
+      transition: background 0.25s;
+    }
+    .btn-primary:hover { background: var(--text-mid); }
+    .btn-danger {
+      width: 100%; padding: 13px;
+      background: none; color: #a32d2d;
+      border: 1px solid rgba(163,45,45,0.3);
+      border-radius: 10px;
+      font-family: 'Jost', sans-serif; font-size: 0.7rem;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      cursor: pointer; margin-top: 14px;
+      transition: all 0.2s;
+    }
+    .btn-danger:hover { background: rgba(163,45,45,0.05); border-color: rgba(163,45,45,0.5); }
+    .contact-note { font-size: 0.62rem; color: var(--text-soft); text-align: center; margin-top: 12px; line-height: 1.7; }
+
+    /* ── SUCCESS ── */
+    .success-screen { display: none; text-align: center; padding: 60px 24px; }
+    .success-icon { font-size: 2.5rem; margin-bottom: 16px; }
+    .success-title { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 300; color: var(--text-dark); margin-bottom: 8px; }
+    .success-msg { font-size: 0.75rem; color: var(--text-mid); line-height: 1.9; margin-top: 12px; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      .page { padding: 28px 16px 60px; }
+      .top-nav { padding: 14px 20px; }
+      .top-nav-back { left: 20px; }
+      .date-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="index.html" class="top-nav-back">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Back
+  </a>
+  <a href="index.html" class="top-nav-logo">the backdrop bar</a>
+</nav>
+
+<div class="page">
+
+  <!-- Main content -->
+  <div id="mainContent">
+
+    <div class="hero">
+      <div class="hero-eyebrow" id="orderNumber">Reservation #TBB-20260506-4821</div>
+      <div class="hero-title">Manage Your Booking</div>
+      <div class="hero-line"></div>
+      <div class="hero-sub">Select new dates below and submit your request. We'll review and confirm your changes within a few hours.</div>
+    </div>
+
+    <!-- Current booking -->
+    <div class="section">
+      <div class="section-label">Your Booking</div>
+      <div class="card">
+        <div class="booking-item">
+          <div class="booking-img" id="bookingImg"></div>
+          <div>
+            <div class="booking-name" id="bookingName">Blush Floral Arch Panel</div>
+            <div class="booking-variant" id="bookingVariant">Blush Pink · Qty 1</div>
+            <span class="status-badge"><span class="status-dot"></span>Confirmed</span>
+          </div>
+        </div>
+        <div class="card-row">
+          <div class="row-label">Needed By</div>
+          <div class="row-val" id="currentPickup">—</div>
+        </div>
+        <div class="card-row">
+          <div class="row-label">Return By</div>
+          <div class="row-val" id="currentReturn">—</div>
+        </div>
+        <div class="card-row">
+          <div class="row-label">Order Total</div>
+          <div class="row-val" id="currentTotal">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Update dates -->
+    <div class="section">
+      <div class="section-label">Request New Dates</div>
+      <div class="card">
+        <div class="date-grid">
+          <div>
+            <div class="date-field-label">New Needed By</div>
+            <div class="date-field" id="pickupField" onclick="openPicker('pickup')">
+              <span class="date-field-text" id="pickupDisplay">Select date &amp; time</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+          </div>
+          <div>
+            <div class="date-field-label">New Return By</div>
+            <div class="date-field" id="returnField" onclick="openPicker('return')">
+              <span class="date-field-text" id="returnDisplay">Select date &amp; time</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="duration-note" id="durationNote"></div>
+      </div>
+    </div>
+
+    <!-- Warning -->
+    <div class="warning-box" id="warningBox">
+      ⚠ Your requested date is within 48 hours of your event. Changes may not be possible — please contact us directly at info@backdropbarco.com.
+    </div>
+
+    <!-- Actions -->
+    <button class="btn-primary" onclick="submitRequest()">Request Changes</button>
+    <div class="contact-note">Questions? Email us at <a href="mailto:info@backdropbarco.com" style="color:var(--text-mid);">info@backdropbarco.com</a></div>
+    <button class="btn-danger" onclick="cancelReservation()">Cancel Reservation</button>
+
+  </div>
+
+  <!-- Success screen -->
+  <div class="success-screen" id="successScreen">
+    <div class="success-icon" id="successIcon">✅</div>
+    <div class="success-title" id="successTitle">Request Sent</div>
+    <div class="hero-line"></div>
+    <div class="success-msg" id="successMsg"></div>
+  </div>
+
+</div>
+
+<!-- Calendar popup -->
+<div class="picker-overlay" id="pickerOverlay">
+  <div class="picker-popup">
+    <div class="picker-header">
+      <span class="picker-title" id="pickerTitle"></span>
+      <button class="picker-close" onclick="closePicker()">✕</button>
+    </div>
+    <div class="cal-nav-row">
+      <button class="cal-nav-btn" onclick="changeMonth(-1)">‹</button>
+      <div class="cal-month-label" id="calMonthLabel"></div>
+      <button class="cal-nav-btn" onclick="changeMonth(1)">›</button>
+    </div>
+    <div class="cal-days-header">
+      <div class="cal-day-lbl">Su</div><div class="cal-day-lbl">Mo</div>
+      <div class="cal-day-lbl">Tu</div><div class="cal-day-lbl">We</div>
+      <div class="cal-day-lbl">Th</div><div class="cal-day-lbl">Fr</div>
+      <div class="cal-day-lbl">Sa</div>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <!-- Time -->
+    <div style="border-top:1px solid rgba(201,180,154,0.2);padding-top:14px;margin-bottom:14px;">
+      <div style="font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-soft);margin-bottom:10px;">Time</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <select id="pickerHour" style="flex:1;padding:8px 10px;border:1px solid rgba(201,180,154,0.5);border-radius:8px;font-family:'Jost',sans-serif;font-size:0.78rem;color:var(--text-dark);background:white;"></select>
+        <span style="color:var(--text-soft);">:</span>
+        <select id="pickerMin" style="flex:1;padding:8px 10px;border:1px solid rgba(201,180,154,0.5);border-radius:8px;font-family:'Jost',sans-serif;font-size:0.78rem;color:var(--text-dark);background:white;">
+          <option value="00">00</option><option value="15">15</option>
+          <option value="30">30</option><option value="45">45</option>
+        </select>
+      </div>
+    </div>
+    <button class="picker-confirm" onclick="confirmPicker()">Confirm</button>
+  </div>
+</div>
+
+<script>
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const now = new Date();
+  let activePicker = null, calYear = now.getFullYear(), calMonth = now.getMonth(), selectedDay = null;
+  let pickupDate = null, returnDate = null;
+
+  // Load cart data to populate booking details
+  document.addEventListener('DOMContentLoaded', function() {
+    const cart = JSON.parse(localStorage.getItem('tbb_cart') || '[]');
+    if (cart.length > 0) {
+      const item = cart[0];
+      document.getElementById('bookingName').textContent    = item.title || 'Your Item';
+      document.getElementById('bookingVariant').textContent = `${item.variant || ''} · Qty ${item.qty || 1}`;
+      document.getElementById('currentPickup').textContent  = item.pickup !== 'Select date & time' ? item.pickup : '—';
+      document.getElementById('currentReturn').textContent  = item.ret !== 'Select date & time' ? item.ret : '—';
+      const tax = (item.price * item.qty) * 0.09875;
+      document.getElementById('currentTotal').textContent   = '$' + ((item.price * item.qty) + tax).toFixed(2);
+      if (item.imgHTML) document.getElementById('bookingImg').innerHTML = item.imgHTML;
+    }
+
+    // Build hour options 7am–9pm
+    const h = document.getElementById('pickerHour');
+    const slots = [
+      {v:'07',a:'AM'},{v:'08',a:'AM'},{v:'09',a:'AM'},{v:'10',a:'AM'},{v:'11',a:'AM'},
+      {v:'12',a:'PM'},{v:'01',a:'PM'},{v:'02',a:'PM'},{v:'03',a:'PM'},{v:'04',a:'PM'},
+      {v:'05',a:'PM'},{v:'06',a:'PM'},{v:'07',a:'PM'},{v:'08',a:'PM'},{v:'09',a:'PM'}
+    ];
+    slots.forEach(s => {
+      const o = document.createElement('option');
+      o.value = s.v + '|' + s.a;
+      o.textContent = `${parseInt(s.v)} ${s.a}`;
+      h.appendChild(o);
+    });
+    h.value = '09|AM';
+  });
+
+  function openPicker(type) {
+    activePicker = type;
+    selectedDay = null;
+    calYear = now.getFullYear();
+    calMonth = now.getMonth();
+    document.getElementById('pickerTitle').textContent = type === 'pickup' ? 'New Needed By' : 'New Return By';
+    document.getElementById('pickerOverlay').classList.add('open');
+    renderCalendar();
+  }
+
+  function closePicker() {
+    document.getElementById('pickerOverlay').classList.remove('open');
+  }
+
+  function changeMonth(delta) {
+    calMonth += delta;
+    if (calMonth > 11) { calMonth = 0; calYear++; }
+    if (calMonth < 0)  { calMonth = 11; calYear--; }
+    renderCalendar();
+  }
+
+  function renderCalendar() {
+    document.getElementById('calMonthLabel').textContent = `${MONTHS[calMonth]} ${calYear}`;
+    const grid = document.getElementById('calGrid');
+    grid.innerHTML = '';
+    const firstDay = new Date(calYear, calMonth, 1).getDay();
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    for (let i = 0; i < firstDay; i++) {
+      const e = document.createElement('div'); e.className = 'cal-day empty'; grid.appendChild(e);
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+      const cell = document.createElement('div');
+      cell.className = 'cal-day'; cell.textContent = d;
+      const isPast = new Date(calYear, calMonth, d) < new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      if (activePicker === 'return' && pickupDate) {
+        const pd = new Date(pickupDate.y, pickupDate.m, pickupDate.d);
+        if (new Date(calYear, calMonth, d) < pd) { cell.classList.add('disabled'); grid.appendChild(cell); continue; }
+      }
+      if (isPast) { cell.classList.add('disabled'); }
+      else {
+        if (calYear === now.getFullYear() && calMonth === now.getMonth() && d === now.getDate()) cell.classList.add('today');
+        if (selectedDay === d) cell.classList.add('selected');
+        cell.onclick = () => { selectedDay = d; renderCalendar(); };
+      }
+      grid.appendChild(cell);
+    }
+  }
+
+  function confirmPicker() {
+    if (!selectedDay) { alert('Please select a date.'); return; }
+    const hourVal = document.getElementById('pickerHour').value;
+    const [h, ampm] = hourVal.split('|');
+    const min = document.getElementById('pickerMin').value;
+    const dateStr = `${MONTHS[calMonth]} ${selectedDay}, ${calYear}`;
+    const timeStr = `${parseInt(h)}:${min} ${ampm}`;
+    const display = `${dateStr} at ${timeStr}`;
+
+    if (activePicker === 'pickup') {
+      pickupDate = { y: calYear, m: calMonth, d: selectedDay };
+      document.getElementById('pickupDisplay').textContent = display;
+      document.getElementById('pickupField').classList.add('filled');
+      // Check if within 48hrs
+      const hrs = (new Date(calYear, calMonth, selectedDay) - now) / 3600000;
+      document.getElementById('warningBox').style.display = hrs < 48 ? 'block' : 'none';
+      // Reset return if now invalid
+      if (returnDate) {
+        returnDate = null;
+        document.getElementById('returnDisplay').textContent = 'Select date & time';
+        document.getElementById('returnField').classList.remove('filled');
+        document.getElementById('durationNote').textContent = '';
+      }
+    } else {
+      returnDate = { y: calYear, m: calMonth, d: selectedDay };
+      document.getElementById('returnDisplay').textContent = display;
+      document.getElementById('returnField').classList.add('filled');
+    }
+    updateDuration();
+    closePicker();
+  }
+
+  function updateDuration() {
+    if (pickupDate && returnDate) {
+      const d1 = new Date(pickupDate.y, pickupDate.m, pickupDate.d);
+      const d2 = new Date(returnDate.y, returnDate.m, returnDate.d);
+      const diff = Math.round((d2 - d1) / (1000*60*60*24));
+      const el = document.getElementById('durationNote');
+      if (diff < 0) { el.textContent = 'Return must be after pickup.'; el.style.color = '#c9705a'; }
+      else { el.textContent = `New duration: ${diff} day${diff !== 1 ? 's' : ''}`; el.style.color = 'var(--text-soft)'; }
+    }
+  }
+
+  function submitRequest() {
+    if (!pickupDate && !returnDate) {
+      alert('Please select at least one new date before submitting.');
+      return;
+    }
+    const pu = pickupDate ? `${MONTHS[pickupDate.m]} ${pickupDate.d}, ${pickupDate.y}` : '(unchanged)';
+    const re = returnDate ? `${MONTHS[returnDate.m]} ${returnDate.d}, ${returnDate.y}` : '(unchanged)';
+    document.getElementById('successMsg').innerHTML =
+      `Your change request has been received.<br><br>
+      <strong>Requested Needed By:</strong> ${pu}<br>
+      <strong>Requested Return By:</strong> ${re}<br><br>
+      We'll review and confirm your updated dates within a few hours. A confirmation will be sent to your email.`;
+    document.getElementById('mainContent').style.display = 'none';
+    document.getElementById('successScreen').style.display = 'block';
+  }
+
+  function cancelReservation() {
+    if (!confirm('Are you sure you want to cancel your reservation? Our cancellation policy will apply.')) return;
+    document.getElementById('successIcon').textContent = '🤍';
+    document.getElementById('successTitle').textContent = 'Reservation Cancelled';
+    document.getElementById('successMsg').innerHTML =
+      'Your reservation has been cancelled.<br><br>A refund will be processed in accordance with our cancellation policy. A confirmation email will be sent to you shortly.';
+    document.getElementById('mainContent').style.display = 'none';
+    document.getElementById('successScreen').style.display = 'block';
+  }
+
+  document.getElementById('pickerOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closePicker();
+  });
+</script>
+
+</body>
+</html>

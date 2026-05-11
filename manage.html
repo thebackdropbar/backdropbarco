@@ -296,16 +296,40 @@
 
   // Load cart data to populate booking details
   document.addEventListener('DOMContentLoaded', function() {
-    const cart = JSON.parse(localStorage.getItem('tbb_cart') || '[]');
-    if (cart.length > 0) {
-      const item = cart[0];
-      document.getElementById('bookingName').textContent    = item.title || 'Your Item';
-      document.getElementById('bookingVariant').textContent = `${item.variant || ''} · Qty ${item.qty || 1}`;
-      document.getElementById('currentPickup').textContent  = item.pickup !== 'Select date & time' ? item.pickup : '—';
-      document.getElementById('currentReturn').textContent  = item.ret !== 'Select date & time' ? item.ret : '—';
-      const tax = (item.price * item.qty) * 0.09875;
-      document.getElementById('currentTotal').textContent   = '$' + ((item.price * item.qty) + tax).toFixed(2);
-      if (item.imgHTML) document.getElementById('bookingImg').innerHTML = item.imgHTML;
+    // Read from URL params first (from email link), fallback to localStorage
+    const params = new URLSearchParams(window.location.search);
+    const orderNum = params.get('order');
+    if (orderNum) document.getElementById('orderNumber').textContent = `Reservation ${orderNum}`;
+
+    const name    = params.get('name');
+    const variant = params.get('variant');
+    const qty     = params.get('qty');
+    const pickup  = params.get('pickup');
+    const ret     = params.get('ret');
+    const total   = params.get('total');
+
+    if (name) {
+      document.getElementById('bookingName').textContent    = decodeURIComponent(name);
+      document.getElementById('bookingVariant').textContent = `${decodeURIComponent(variant || '')} · Qty ${qty || 1}`;
+      document.getElementById('currentPickup').textContent  = pickup ? decodeURIComponent(pickup) : '—';
+      document.getElementById('currentReturn').textContent  = ret ? decodeURIComponent(ret) : '—';
+      document.getElementById('currentTotal').textContent   = total ? '$' + decodeURIComponent(total) : '—';
+    } else {
+      // Fallback to localStorage
+      const cart = JSON.parse(localStorage.getItem('tbb_cart') || '[]');
+      if (cart.length > 0) {
+        const item = cart[0];
+        document.getElementById('bookingName').textContent    = item.title || 'Your Item';
+        document.getElementById('bookingVariant').textContent = `${item.variant || ''} · Qty ${item.qty || 1}`;
+        document.getElementById('currentPickup').textContent  = item.pickup !== 'Select date & time' ? item.pickup : '—';
+        document.getElementById('currentReturn').textContent  = item.ret !== 'Select date & time' ? item.ret : '—';
+        const daysMatch = item.duration ? item.duration.match(/(\d+)\s*day/) : null;
+        const days = daysMatch ? parseInt(daysMatch[1]) : 1;
+        const subtotal = item.price * item.qty * days;
+        const tax = subtotal * 0.09875;
+        document.getElementById('currentTotal').textContent = '$' + (subtotal + tax).toFixed(2);
+        if (item.imgHTML) document.getElementById('bookingImg').innerHTML = item.imgHTML;
+      }
     }
 
     // Build hour options 7am–9pm

@@ -719,7 +719,7 @@
           currency: 'usd',
           email,
           name: `${firstName} ${lastName}`,
-          description: `The Backdrop Bar — ${isUrgent ? 'Full Payment' : '50% Deposit'}`,
+          description: `The Backdrop Bar — Full Payment`,
           metadata: {
             customer_email: email,
             customer_phone: phone,
@@ -747,7 +747,7 @@
       if (stripeError) {
         errorEl.textContent = stripeError.message;
         btn.disabled = false;
-        btn.textContent = `Pay $${((subtotal + tax) * depositRate).toFixed(2)} Now`;
+        btn.textContent = `Pay $${(subtotal + tax).toFixed(2)} Now`;
         return;
       }
 

@@ -184,7 +184,7 @@
       <div class="hero-eyebrow" id="orderNumber">Reservation #TBB-20260506-4821</div>
       <div class="hero-title">Manage Your Booking</div>
       <div class="hero-line"></div>
-      <div class="hero-sub">Select new dates below and submit your request. We'll review and confirm your changes within a few hours.</div>
+      <div class="hero-sub">Select new dates below and submit your request. We'll review and confirm your changes within a few hours. Any pricing adjustments due to date changes will be handled separately.</div>
     </div>
 
     <!-- Current booking -->
@@ -235,6 +235,7 @@
           </div>
         </div>
         <div class="duration-note" id="durationNote"></div>
+        <div id="costBreakdown" style="display:none;margin:0 20px 16px;padding:14px 16px;background:var(--parchment);border:1px solid rgba(201,180,154,0.3);border-radius:10px;"></div>
       </div>
     </div>
 
@@ -389,13 +390,11 @@
     const display = `${dateStr} at ${timeStr}`;
 
     if (activePicker === 'pickup') {
-      pickupDate = { y: calYear, m: calMonth, d: selectedDay };
+      pickupDate = { y: calYear, m: calMonth, d: selectedDay, h: parseInt(h), min: parseInt(min), ampm };
       document.getElementById('pickupDisplay').textContent = display;
       document.getElementById('pickupField').classList.add('filled');
-      // Check if within 48hrs
       const hrs = (new Date(calYear, calMonth, selectedDay) - now) / 3600000;
       document.getElementById('warningBox').style.display = hrs < 48 ? 'block' : 'none';
-      // Reset return if now invalid
       if (returnDate) {
         returnDate = null;
         document.getElementById('returnDisplay').textContent = 'Select date & time';
@@ -403,6 +402,24 @@
         document.getElementById('durationNote').textContent = '';
       }
     } else {
+      // Validate return is at least 15 min after pickup
+      if (pickupDate) {
+        let ph = pickupDate.h;
+        if (pickupDate.ampm === 'PM' && ph !== 12) ph += 12;
+        if (pickupDate.ampm === 'AM' && ph === 12) ph = 0;
+        const pickupMS = new Date(pickupDate.y, pickupDate.m, pickupDate.d, ph, pickupDate.min).getTime();
+
+        let rh = parseInt(h);
+        if (ampm === 'PM' && rh !== 12) rh += 12;
+        if (ampm === 'AM' && rh === 12) rh = 0;
+        const returnMS = new Date(calYear, calMonth, selectedDay, rh, parseInt(min)).getTime();
+
+        if (returnMS < pickupMS + 15 * 60 * 1000) {
+          document.getElementById('durationNote').textContent = 'Return must be at least 15 minutes after pickup.';
+          document.getElementById('durationNote').style.color = '#c9705a';
+          return;
+        }
+      }
       returnDate = { y: calYear, m: calMonth, d: selectedDay };
       document.getElementById('returnDisplay').textContent = display;
       document.getElementById('returnField').classList.add('filled');
@@ -417,8 +434,63 @@
       const d2 = new Date(returnDate.y, returnDate.m, returnDate.d);
       const diff = Math.round((d2 - d1) / (1000*60*60*24));
       const el = document.getElementById('durationNote');
-      if (diff < 0) { el.textContent = 'Return must be after pickup.'; el.style.color = '#c9705a'; }
-      else { el.textContent = `New duration: ${diff} day${diff !== 1 ? 's' : ''}`; el.style.color = 'var(--text-soft)'; }
+
+      if (diff < 0) {
+        el.innerHTML = 'Return must be after pickup.';
+        el.style.color = '#c9705a';
+        document.getElementById('costBreakdown').style.display = 'none';
+        return;
+      }
+
+      el.textContent = `New duration: ${diff} day${diff !== 1 ? 's' : ''}`;
+      el.style.color = 'var(--text-soft)';
+
+      // Calculate new cost
+      const cart = JSON.parse(localStorage.getItem('tbb_cart') || '[]');
+      if (cart.length > 0) {
+        const pricePerDay = cart[0].price || 0;
+        const qty = cart[0].qty || 1;
+        const subtotal = pricePerDay * qty * diff;
+        const tax = subtotal * 0.09875;
+        const total = subtotal + tax;
+
+        // Original cost
+        const origCart = cart[0];
+        const origPickup = origCart.pickup || '';
+        const origRet = origCart.ret || '';
+        const origDiff = (() => {
+          const m = origPickup.match(/(\w+) (\d+), (\d+)/);
+          const m2 = origRet.match(/(\w+) (\d+), (\d+)/);
+          if (!m || !m2) return null;
+          const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+          const d1o = new Date(parseInt(m[3]), months.indexOf(m[1]), parseInt(m[2]));
+          const d2o = new Date(parseInt(m2[3]), months.indexOf(m2[1]), parseInt(m2[2]));
+          return Math.round((d2o - d1o) / 86400000);
+        })();
+
+        const origSubtotal = origDiff !== null ? pricePerDay * qty * origDiff : null;
+        const origTotal = origSubtotal !== null ? origSubtotal * 1.09875 : null;
+        const diff2 = origTotal !== null ? total - origTotal : null;
+
+        document.getElementById('costBreakdown').style.display = 'block';
+        document.getElementById('costBreakdown').innerHTML = `
+          <div style="font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-soft);margin-bottom:10px;">Updated Cost Estimate</div>
+          <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--text-mid);padding:5px 0;">
+            <span>${diff} day${diff !== 1 ? 's' : ''} × $${pricePerDay} × ${qty}</span><span>$${subtotal.toFixed(2)}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--text-mid);padding:5px 0;">
+            <span>CA Sales Tax (9.875%)</span><span>$${tax.toFixed(2)}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:0.82rem;color:var(--text-dark);padding:8px 0;border-top:1px solid rgba(201,180,154,0.25);margin-top:4px;">
+            <strong>New Total</strong><strong>$${total.toFixed(2)}</strong>
+          </div>
+          ${diff2 !== null ? `<div style="font-size:0.65rem;color:${diff2 > 0 ? '#c0392b' : '#0f6e56'};margin-top:6px;padding:8px 10px;background:${diff2 > 0 ? 'rgba(192,57,43,0.06)' : 'rgba(29,158,117,0.07)'};border-radius:6px;border:1px solid ${diff2 > 0 ? 'rgba(192,57,43,0.15)' : 'rgba(29,158,117,0.2)'};">
+            ${diff2 > 0 ? `↑ Additional $${diff2.toFixed(2)} may be charged for the extended rental` : `↓ A refund of $${Math.abs(diff2).toFixed(2)} may be issued for the shorter rental`}
+          </div>` : ''}
+        `;
+      }
+    } else {
+      document.getElementById('costBreakdown').style.display = 'none';
     }
   }
 

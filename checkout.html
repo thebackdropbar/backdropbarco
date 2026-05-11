@@ -189,7 +189,7 @@
 
 <!-- ── NAV ── -->
 <nav class="top-nav">
-  <a href="cart.html" class="top-nav-back">
+  <a href="cart.html" class="top-nav-back" id="backToCart">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
     Back to Cart
   </a>
@@ -216,10 +216,10 @@
 <div class="success-screen" id="successScreen">
   <div class="success-icon">✨</div>
   <div class="success-title">Booking Confirmed!</div>
+  <div style="font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-soft);margin:8px 0 16px;" id="successOrderNum"></div>
   <p class="success-msg">
     Thank you for your order. A confirmation has been sent to your email.<br><br>
-    Your 50% deposit has been charged. The remaining balance will be collected 48 hours before your pickup date.<br><br>
-    A $175 damage hold has been placed on your card and will be released after your items are returned.
+    A $175 damage hold has been placed on your card and will be released after your items are returned in good condition.
   </p>
   <a href="index.html" class="success-btn">Back to Home</a>
 </div>
@@ -781,6 +781,8 @@
 
       localStorage.removeItem('tbb_cart');
       document.getElementById('checkoutPage').style.display = 'none';
+      document.getElementById('backToCart').style.display = 'none';
+      document.getElementById('successOrderNum').textContent = `Order ${orderNum}`;
       document.getElementById('successScreen').classList.add('show');
 
     } catch (err) {

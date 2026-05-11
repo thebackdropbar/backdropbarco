@@ -306,6 +306,15 @@
       <div class="policy-row"><div class="policy-dot"></div><span>A <strong>$175 damage hold</strong> will be pre-authorized and released after safe return</span></div>
     </div>
 
+    <!-- Rental agreement checkbox -->
+    <div id="agreementWrap" style="display:flex;align-items:flex-start;gap:12px;padding:16px 18px;background:white;border:1px solid rgba(201,180,154,0.3);border-radius:10px;">
+      <div id="agreeBox" onclick="toggleAgreement()" style="width:18px;height:18px;min-width:18px;border:1.5px solid rgba(201,180,154,0.7);border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all 0.2s;"></div>
+      <label onclick="toggleAgreement()" style="font-size:0.7rem;color:var(--text-mid);line-height:1.7;cursor:pointer;">
+        I have read and agree to the <strong style="color:var(--text-dark);">cancellation policy</strong>, <strong style="color:var(--text-dark);">damage hold terms</strong>, and <strong style="color:var(--text-dark);">rental conditions</strong> outlined above. I understand that full payment is charged at checkout and refunds are subject to the cancellation timeline.
+      </label>
+    </div>
+    <div id="agreementError" style="font-size:0.62rem;color:#c9705a;margin-top:4px;display:none;">Please agree to the rental terms before proceeding.</div>
+
   </div>
 
   <!-- RIGHT: Order Summary -->
@@ -401,6 +410,25 @@
       document.getElementById('suggestions-box').style.display = 'none';
     }
   });
+
+  // ── Rental agreement checkbox
+  let agreed = false;
+  function toggleAgreement() {
+    agreed = !agreed;
+    const box = document.getElementById('agreeBox');
+    const wrap = document.getElementById('agreementWrap');
+    if (agreed) {
+      box.innerHTML = '<svg width="11" height="11" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      box.style.background = '#3a2e28';
+      box.style.borderColor = '#3a2e28';
+      wrap.style.borderColor = 'rgba(201,180,154,0.5)';
+      document.getElementById('agreementError').style.display = 'none';
+    } else {
+      box.innerHTML = '';
+      box.style.background = '';
+      box.style.borderColor = 'rgba(201,180,154,0.7)';
+    }
+  }
 
   // ── Real-time field clearing
   ['firstName','lastName','email','phone','address','city','zip'].forEach(id => {
@@ -650,6 +678,14 @@
       hasError = true;
       showSectionError(cardBlock, 'Please enter your complete card details before proceeding.');
       document.getElementById('cardElement').style.borderColor = '#c9705a';
+    }
+
+    // ── Agreement check
+    if (!agreed) {
+      document.getElementById('agreementError').style.display = 'block';
+      document.getElementById('agreementWrap').style.borderColor = '#c9705a';
+      document.getElementById('agreementWrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      hasError = true;
     }
 
     if (hasError) {

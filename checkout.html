@@ -446,6 +446,7 @@
   const stripe = Stripe('pk_test_51TTsbJBkzKhOe4rJSM3zq1akSEt6pXNEVPAIvnbICijGJS9qZfGB54WfeSpgcox8KFgOPYiJe0fCPoQRW3kfYxmp003NSH3Aan');
   const elements = stripe.elements();
   const cardElement = elements.create('card', {
+    disableLink: true,
     style: {
       base: {
         fontFamily: "'Jost', sans-serif",

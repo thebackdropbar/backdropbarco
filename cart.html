@@ -386,7 +386,9 @@
     let subtotal = 0;
 
     cart.forEach((item, idx) => {
-      subtotal += item.price * item.qty;
+      const daysMatch = item.duration ? item.duration.match(/(\d+)\s*day/) : null;
+      const days = daysMatch ? parseInt(daysMatch[1]) : 1;
+      subtotal += item.price * item.qty * days;
       const div = document.createElement('div');
       div.className = 'cart-item';
       div.innerHTML = `

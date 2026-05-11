@@ -492,7 +492,9 @@
     let subtotal = 0;
 
     cart.forEach(item => {
-      subtotal += item.price * item.qty;
+      const daysMatch = item.duration ? item.duration.match(/(\d+)\s*day/) : null;
+      const days = daysMatch ? parseInt(daysMatch[1]) : 1;
+      subtotal += item.price * item.qty * days;
       const div = document.createElement('div');
       div.className = 'summary-item';
       div.innerHTML = `
@@ -707,8 +709,12 @@
     errorEl.textContent = '';
 
     try {
-      // Call our Netlify function to create a payment intent
-      const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+      // Calculate subtotal multiplied by rental duration
+      const subtotal = cart.reduce((s, i) => {
+        const daysMatch = i.duration ? i.duration.match(/(\d+)\s*day/) : null;
+        const days = daysMatch ? parseInt(daysMatch[1]) : 1;
+        return s + (i.price * i.qty * days);
+      }, 0);
       const tax = subtotal * TAX_RATE;
       const totalAmount = Math.round((subtotal + tax) * 100); // full amount in cents
 
@@ -754,7 +760,11 @@
 
       // Success — send confirmation email then clear cart
       const cart2 = JSON.parse(localStorage.getItem('tbb_cart') || '[]');
-      const subtotal2 = cart2.reduce((s, i) => s + i.price * i.qty, 0);
+      const subtotal2 = cart2.reduce((s, i) => {
+        const daysMatch = i.duration ? i.duration.match(/(\d+)\s*day/) : null;
+        const days = daysMatch ? parseInt(daysMatch[1]) : 1;
+        return s + (i.price * i.qty * days);
+      }, 0);
       const tax2 = subtotal2 * TAX_RATE;
       const total2 = subtotal2 + tax2;
       const orderNum = 'TBB-' + Date.now().toString().slice(-8);

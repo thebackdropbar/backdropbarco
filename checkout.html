@@ -300,8 +300,8 @@
     <div class="policy-box">
       <div class="policy-title">Cancellation &amp; Payment Policy</div>
       <div class="policy-row"><div class="policy-dot"></div><span><strong>Full payment</strong> charged at checkout</span></div>
-      <div class="policy-row"><div class="policy-dot"></div><span><strong>5+ days before event</strong> — 100% refund</span></div>
-      <div class="policy-row"><div class="policy-dot"></div><span><strong>2–4 days before event</strong> — 50% refund</span></div>
+      <div class="policy-row"><div class="policy-dot"></div><span><strong>10+ days before event</strong> — 100% refund</span></div>
+      <div class="policy-row"><div class="policy-dot"></div><span><strong>2–10 days before event</strong> — 50% refund</span></div>
       <div class="policy-row"><div class="policy-dot"></div><span><strong>Within 48 hours</strong> — no refund</span></div>
       <div class="policy-row"><div class="policy-dot"></div><span>A <strong>$175 damage hold</strong> will be pre-authorized and released after safe return</span></div>
     </div>
@@ -366,12 +366,28 @@
           item.textContent = label;
           item.onmouseover = () => item.style.background = 'rgba(201,180,154,0.1)';
           item.onmouseout  = () => item.style.background = '';
-          item.onclick = () => {
+          item.onclick = async () => {
             document.getElementById('address').value = street;
             document.getElementById('city').value    = city;
-            document.getElementById('zip').value     = zip;
             box.style.display = 'none';
             clearFieldError('address');
+
+            // Try postcode from Photon first
+            if (p.postcode) {
+              document.getElementById('zip').value = p.postcode;
+            } else {
+              // Fallback: reverse geocode using lat/lng to get ZIP
+              try {
+                const [lng, lat] = f.geometry.coordinates;
+                const rev = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`, {
+                  headers: { 'Accept-Language': 'en' }
+                });
+                const revData = await rev.json();
+                if (revData.address?.postcode) {
+                  document.getElementById('zip').value = revData.address.postcode.slice(0,5);
+                }
+              } catch(e) {}
+            }
           };
           box.appendChild(item);
         });
@@ -473,7 +489,10 @@
     rowsEl.innerHTML = `
       <div class="summary-row"><span>Subtotal</span><span>$${subtotal.toFixed(2)}</span></div>
       <div class="summary-row"><span>CA Sales Tax (9.875%)</span><span>$${tax.toFixed(2)}</span></div>
-      <div class="summary-row total" style="margin-top:8px;"><strong>Total Due Today</strong><strong>$${orderTotal.toFixed(2)}</strong></div>`;
+      <div class="summary-row total" style="margin-top:8px;"><strong>Total Due Today</strong><strong>$${orderTotal.toFixed(2)}</strong></div>
+      <div style="margin-top:10px;padding:10px 12px;background:rgba(29,158,117,0.07);border:1px solid rgba(29,158,117,0.2);border-radius:8px;font-size:0.62rem;color:#0f6e56;line-height:1.7;letter-spacing:0.04em;">
+        ✓ &nbsp;Fully refundable if cancelled 10+ days before your event
+      </div>`;
 
     depositEl.textContent = '$' + orderTotal.toFixed(2);
     document.getElementById('payBtn').textContent = `Pay $${orderTotal.toFixed(2)} Now`;
@@ -696,7 +715,34 @@
         return;
       }
 
-      // Success — clear cart and show confirmation
+      // Success — send confirmation email then clear cart
+      const cart2 = JSON.parse(localStorage.getItem('tbb_cart') || '[]');
+      const subtotal2 = cart2.reduce((s, i) => s + i.price * i.qty, 0);
+      const tax2 = subtotal2 * TAX_RATE;
+      const total2 = subtotal2 + tax2;
+      const orderNum = 'TBB-' + Date.now().toString().slice(-8);
+
+      try {
+        await fetch('/.netlify/functions/send-confirmation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customerEmail: email,
+            customerName: `${firstName} ${lastName}`,
+            orderNumber: orderNum,
+            items: cart2.map(i => ({
+              title: i.title, variant: i.variant, qty: i.qty,
+              pickup: i.pickup, ret: i.ret, duration: i.duration
+            })),
+            subtotal: subtotal2.toFixed(2),
+            tax: tax2.toFixed(2),
+            total: total2.toFixed(2),
+            address: `${address}, ${city}, CA ${zip}`,
+            phone
+          })
+        });
+      } catch(e) { console.error('Email failed:', e); }
+
       localStorage.removeItem('tbb_cart');
       document.getElementById('checkoutPage').style.display = 'none';
       document.getElementById('successScreen').classList.add('show');

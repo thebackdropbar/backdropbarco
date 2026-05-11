@@ -404,12 +404,13 @@
 
 <!-- ═══════════════════════  NAV  ═══════════════════════ -->
 <nav>
-  <a href="cart.html" class="nav-cart" aria-label="Cart">
+  <a href="cart.html" class="nav-cart" aria-label="Cart" style="position:relative;">
     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
       <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
       <line x1="3" y1="6" x2="21" y2="6"/>
       <path d="M16 10a4 4 0 01-8 0"/>
     </svg>
+    <span id="cartBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:#d4a89a;color:white;border-radius:50%;width:16px;height:16px;font-size:9px;font-family:'Jost',sans-serif;font-weight:400;display:flex;align-items:center;justify-content:center;line-height:1;"></span>
   </a>
 </nav>
 
@@ -913,10 +914,20 @@
 <script>
   function scrollToSection(id) {
     const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // Cart badge
+  function updateCartBadge() {
+    const cart = JSON.parse(localStorage.getItem('tbb_cart') || '[]');
+    const total = cart.reduce((sum, i) => sum + i.qty, 0);
+    const badge = document.getElementById('cartBadge');
+    if (badge) {
+      if (total > 0) { badge.textContent = total; badge.style.display = 'flex'; }
+      else { badge.style.display = 'none'; }
     }
   }
+  updateCartBadge();
 </script>
 
 </body>

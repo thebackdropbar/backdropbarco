@@ -422,17 +422,40 @@
     }
   }
 
-  function submitRequest() {
+  async function submitRequest() {
     if (!pickupDate && !returnDate) {
       alert('Please select at least one new date before submitting.');
       return;
     }
-    const pu = pickupDate ? `${MONTHS[pickupDate.m]} ${pickupDate.d}, ${pickupDate.y}` : '(unchanged)';
-    const re = returnDate ? `${MONTHS[returnDate.m]} ${returnDate.d}, ${returnDate.y}` : '(unchanged)';
+
+    const btn = document.querySelector('.btn-primary');
+    btn.textContent = 'Sending...';
+    btn.disabled = true;
+
+    const cart = JSON.parse(localStorage.getItem('tbb_cart') || '[]');
+    const item = cart[0] || {};
+    const pu = pickupDate ? `${MONTHS[pickupDate.m]} ${pickupDate.d}, ${pickupDate.y}` : null;
+    const re = returnDate ? `${MONTHS[returnDate.m]} ${returnDate.d}, ${returnDate.y}` : null;
+
+    try {
+      await fetch('/.netlify/functions/send-change-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderNumber: new URLSearchParams(window.location.search).get('order') || 'TBB-UNKNOWN',
+          customerEmail: item.email || 'Customer',
+          currentPickup: item.pickup || '—',
+          currentReturn: item.ret || '—',
+          newPickup: pu,
+          newReturn: re
+        })
+      });
+    } catch(e) { console.error('Request email failed:', e); }
+
     document.getElementById('successMsg').innerHTML =
       `Your change request has been received.<br><br>
-      <strong>Requested Needed By:</strong> ${pu}<br>
-      <strong>Requested Return By:</strong> ${re}<br><br>
+      <strong>Requested Needed By:</strong> ${pu || '(unchanged)'}<br>
+      <strong>Requested Return By:</strong> ${re || '(unchanged)'}<br><br>
       We'll review and confirm your updated dates within a few hours. A confirmation will be sent to your email.`;
     document.getElementById('mainContent').style.display = 'none';
     document.getElementById('successScreen').style.display = 'block';

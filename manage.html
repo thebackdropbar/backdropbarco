@@ -301,12 +301,17 @@
     const orderNum = params.get('order');
     if (orderNum) document.getElementById('orderNumber').textContent = `Reservation ${orderNum}`;
 
-    const name    = params.get('name');
-    const variant = params.get('variant');
-    const qty     = params.get('qty');
-    const pickup  = params.get('pickup');
-    const ret     = params.get('ret');
-    const total   = params.get('total');
+    const name     = params.get('name');
+    const variant  = params.get('variant');
+    const qty      = params.get('qty');
+    const pickup   = params.get('pickup');
+    const ret      = params.get('ret');
+    const total    = params.get('total');
+    const email    = params.get('email');
+    const customer = params.get('customer');
+
+    // Store for use in cancelReservation
+    window._orderData = { orderNumber: orderNum, customerEmail: email, customerName: customer, itemName: name, itemVariant: variant, itemQty: qty, pickup, ret, total };
 
     if (name) {
       document.getElementById('bookingName').textContent    = decodeURIComponent(name);
@@ -549,12 +554,47 @@
     document.getElementById('successScreen').style.display = 'block';
   }
 
-  function cancelReservation() {
+  async function cancelReservation() {
     if (!confirm('Are you sure you want to cancel your reservation? Our cancellation policy will apply.')) return;
+
+    const btn = document.querySelector('.btn-danger');
+    btn.textContent = 'Cancelling...';
+    btn.disabled = true;
+
+    // Get order data — prefer URL params, fall back to localStorage
+    const d = window._orderData || {};
+    const cart = JSON.parse(localStorage.getItem('tbb_cart') || '[]');
+    const item = cart[0] || {};
+
+    const payload = {
+      orderNumber:   d.orderNumber || 'TBB-UNKNOWN',
+      customerEmail: d.customerEmail || item.email || '',
+      customerName:  d.customerName  || item.name  || 'Customer',
+      itemName:      d.itemName      ? decodeURIComponent(d.itemName)    : (item.title   || 'Your Item'),
+      itemVariant:   d.itemVariant   ? decodeURIComponent(d.itemVariant) : (item.variant || ''),
+      itemQty:       d.itemQty       || item.qty   || 1,
+      pickup:        d.pickup        ? decodeURIComponent(d.pickup)      : (item.pickup  || '—'),
+      ret:           d.ret           ? decodeURIComponent(d.ret)         : (item.ret     || '—'),
+      total:         d.total         || '0'
+    };
+
+    try {
+      const res = await fetch('/.netlify/functions/send-cancellation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || 'Request failed');
+    } catch (e) {
+      console.error('Cancellation email failed:', e);
+      // Still show success screen — don't block customer if email fails
+    }
+
     document.getElementById('successIcon').textContent = '🤍';
     document.getElementById('successTitle').textContent = 'Reservation Cancelled';
     document.getElementById('successMsg').innerHTML =
-      'Your reservation has been cancelled.<br><br>A refund will be processed in accordance with our cancellation policy. A confirmation email will be sent to you shortly.';
+      'Your reservation has been cancelled.<br><br>A refund will be processed in accordance with our cancellation policy. A confirmation email has been sent to you — please check your inbox.';
     document.getElementById('mainContent').style.display = 'none';
     document.getElementById('successScreen').style.display = 'block';
   }

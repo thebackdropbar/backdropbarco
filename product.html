@@ -621,27 +621,57 @@
 
   const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-  // Build hour options
-  document.addEventListener('DOMContentLoaded', function() {
+  // All available time slots 7am–9pm
+  const TIME_SLOTS = [
+    {v:'07',a:'AM'},{v:'08',a:'AM'},{v:'09',a:'AM'},{v:'10',a:'AM'},{v:'11',a:'AM'},
+    {v:'12',a:'PM'},{v:'01',a:'PM'},{v:'02',a:'PM'},{v:'03',a:'PM'},{v:'04',a:'PM'},
+    {v:'05',a:'PM'},{v:'06',a:'PM'},{v:'07',a:'PM'},{v:'08',a:'PM'},{v:'09',a:'PM'}
+  ];
+
+  function slotTo24(slot) {
+    let h = parseInt(slot.v);
+    if (slot.a === 'PM' && h !== 12) h += 12;
+    if (slot.a === 'AM' && h === 12) h = 0;
+    return h;
+  }
+
+  function rebuildHours(year, month, day) {
     const h = document.getElementById('picker-hour');
-    // 7 AM to 9 PM only (7,8,9,10,11,12,1,2,3,4,5,6,7,8,9)
-    const hours = [7,8,9,10,11,12,1,2,3,4,5,6,7,8,9];
-    const ampms = ['AM','AM','AM','AM','AM','PM','PM','PM','PM','PM','PM','PM','PM','PM','PM'];
-    // Build unique hour+ampm combos
-    const slots = [
-      {v:'07',a:'AM'},{v:'08',a:'AM'},{v:'09',a:'AM'},{v:'10',a:'AM'},{v:'11',a:'AM'},
-      {v:'12',a:'PM'},{v:'01',a:'PM'},{v:'02',a:'PM'},{v:'03',a:'PM'},{v:'04',a:'PM'},
-      {v:'05',a:'PM'},{v:'06',a:'PM'},{v:'07',a:'PM'},{v:'08',a:'PM'},{v:'09',a:'PM'}
-    ];
-    slots.forEach(s => {
+    const isToday = year === now.getFullYear() && month === now.getMonth() && day === now.getDate();
+    const currentHour24 = now.getHours();
+    const prevVal = h.value;
+
+    h.innerHTML = '';
+    const available = TIME_SLOTS.filter(s => !isToday || slotTo24(s) > currentHour24);
+
+    if (available.length === 0) {
+      // All times today have passed — shouldn't reach here since today's past calendar days are blocked
+      const o = document.createElement('option');
+      o.value = ''; o.textContent = 'No times available today';
+      h.appendChild(o);
+      return;
+    }
+
+    available.forEach(s => {
       const o = document.createElement('option');
       o.value = s.v + '|' + s.a;
       o.textContent = `${parseInt(s.v)} ${s.a}`;
       h.appendChild(o);
     });
+
+    // Restore previous selection if still valid, else default to first available
+    if ([...h.options].some(o => o.value === prevVal)) {
+      h.value = prevVal;
+    } else {
+      h.selectedIndex = 0;
+    }
+  }
+
+  // Build initial hour options
+  document.addEventListener('DOMContentLoaded', function() {
+    rebuildHours(now.getFullYear(), now.getMonth(), now.getDate());
     // Hide the separate AM/PM selector since it's baked in
     document.getElementById('picker-ampm').style.display = 'none';
-    h.value = '09|AM';
   });
 
   function openPicker(type) {
@@ -715,6 +745,7 @@
 
   function selectDay(d) {
     selectedDay = { d, m: calMonth, y: calYear };
+    rebuildHours(calYear, calMonth, d);
     renderCalendar();
   }
 
@@ -736,13 +767,6 @@
     if (ampm === 'PM' && hour24 !== 12) hour24 += 12;
     if (ampm === 'AM' && hour24 === 12) hour24 = 0;
     const selectedMins = new Date(selectedDay.y, selectedDay.m, selectedDay.d, hour24, parseInt(min)).getTime();
-
-    // Block past times if today is selected
-    if (selectedMins <= Date.now()) {
-      document.getElementById('rental-duration').textContent = 'That time has already passed — please select a future time.';
-      document.getElementById('rental-duration').style.color = '#c9705a';
-      return;
-    }
 
     // For return picker — must be at least 15 min after pickup
     if (activePicker === 'return' && pickupDate) {

@@ -621,56 +621,38 @@
 
   const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-  // All available time slots 7am–9pm
   const TIME_SLOTS = [
     {v:'07',a:'AM'},{v:'08',a:'AM'},{v:'09',a:'AM'},{v:'10',a:'AM'},{v:'11',a:'AM'},
     {v:'12',a:'PM'},{v:'01',a:'PM'},{v:'02',a:'PM'},{v:'03',a:'PM'},{v:'04',a:'PM'},
     {v:'05',a:'PM'},{v:'06',a:'PM'},{v:'07',a:'PM'},{v:'08',a:'PM'},{v:'09',a:'PM'}
   ];
-
-  function slotTo24(slot) {
-    let h = parseInt(slot.v);
-    if (slot.a === 'PM' && h !== 12) h += 12;
-    if (slot.a === 'AM' && h === 12) h = 0;
+  function slotTo24(s) {
+    let h = parseInt(s.v);
+    if (s.a === 'PM' && h !== 12) h += 12;
+    if (s.a === 'AM' && h === 12) h = 0;
     return h;
   }
-
-  function rebuildHours(year, month, day) {
-    const h = document.getElementById('picker-hour');
-    const isToday = year === now.getFullYear() && month === now.getMonth() && day === now.getDate();
-    const currentHour24 = now.getHours();
-    const prevVal = h.value;
-
-    h.innerHTML = '';
-    const available = TIME_SLOTS.filter(s => !isToday || slotTo24(s) > currentHour24);
-
-    if (available.length === 0) {
-      // All times today have passed — shouldn't reach here since today's past calendar days are blocked
-      const o = document.createElement('option');
-      o.value = ''; o.textContent = 'No times available today';
-      h.appendChild(o);
-      return;
-    }
-
-    available.forEach(s => {
+  function rebuildHours(isToday) {
+    const el = document.getElementById('picker-hour');
+    const minHour = isToday ? now.getHours() + 1 : 0;
+    el.innerHTML = '';
+    TIME_SLOTS.forEach(s => {
+      if (slotTo24(s) < minHour) return;
       const o = document.createElement('option');
       o.value = s.v + '|' + s.a;
       o.textContent = `${parseInt(s.v)} ${s.a}`;
-      h.appendChild(o);
+      el.appendChild(o);
     });
-
-    // Restore previous selection if still valid, else default to first available
-    if ([...h.options].some(o => o.value === prevVal)) {
-      h.value = prevVal;
-    } else {
-      h.selectedIndex = 0;
+    if (el.options.length === 0) {
+      const o = document.createElement('option');
+      o.value = ''; o.textContent = 'No times left today — pick a future date';
+      el.appendChild(o);
     }
   }
 
-  // Build initial hour options
+  // Build hour options — show all on load, filter when a day is selected
   document.addEventListener('DOMContentLoaded', function() {
-    rebuildHours(now.getFullYear(), now.getMonth(), now.getDate());
-    // Hide the separate AM/PM selector since it's baked in
+    rebuildHours(false);
     document.getElementById('picker-ampm').style.display = 'none';
   });
 
@@ -745,7 +727,8 @@
 
   function selectDay(d) {
     selectedDay = { d, m: calMonth, y: calYear };
-    rebuildHours(calYear, calMonth, d);
+    const isToday = calYear === now.getFullYear() && calMonth === now.getMonth() && d === now.getDate();
+    rebuildHours(isToday);
     renderCalendar();
   }
 

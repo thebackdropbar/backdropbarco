@@ -582,39 +582,32 @@
     {v:'12',a:'PM'},{v:'01',a:'PM'},{v:'02',a:'PM'},{v:'03',a:'PM'},{v:'04',a:'PM'},
     {v:'05',a:'PM'},{v:'06',a:'PM'},{v:'07',a:'PM'},{v:'08',a:'PM'},{v:'09',a:'PM'}
   ];
-
-  function cartSlotTo24(slot) {
-    let h = parseInt(slot.v);
-    if (slot.a === 'PM' && h !== 12) h += 12;
-    if (slot.a === 'AM' && h === 12) h = 0;
+  function cartSlotTo24(s) {
+    let h = parseInt(s.v);
+    if (s.a === 'PM' && h !== 12) h += 12;
+    if (s.a === 'AM' && h === 12) h = 0;
     return h;
   }
-
-  function rebuildCartHours(year, month, day) {
-    const h = document.getElementById('cartPickerHour');
-    const isToday = year === now.getFullYear() && month === now.getMonth() && day === now.getDate();
-    const currentHour24 = now.getHours();
-    const prevVal = h.value;
-    h.innerHTML = '';
-    const available = CART_TIME_SLOTS.filter(s => !isToday || cartSlotTo24(s) > currentHour24);
-    if (available.length === 0) {
-      const o = document.createElement('option');
-      o.value = ''; o.textContent = 'No times available today';
-      h.appendChild(o);
-      return;
-    }
-    available.forEach(s => {
+  function rebuildCartHours(isToday) {
+    const el = document.getElementById('cartPickerHour');
+    const minHour = isToday ? now.getHours() + 1 : 0;
+    el.innerHTML = '';
+    CART_TIME_SLOTS.forEach(s => {
+      if (cartSlotTo24(s) < minHour) return;
       const o = document.createElement('option');
       o.value = s.v + '|' + s.a;
       o.textContent = `${parseInt(s.v)} ${s.a}`;
-      h.appendChild(o);
+      el.appendChild(o);
     });
-    if ([...h.options].some(o => o.value === prevVal)) h.value = prevVal;
-    else h.selectedIndex = 0;
+    if (el.options.length === 0) {
+      const o = document.createElement('option');
+      o.value = ''; o.textContent = 'No times left today — pick a future date';
+      el.appendChild(o);
+    }
   }
 
   document.addEventListener('DOMContentLoaded', function() {
-    rebuildCartHours(now.getFullYear(), now.getMonth(), now.getDate());
+    rebuildCartHours(false);
   });
 
   // ── Edit Dates Modal
@@ -689,7 +682,12 @@
       } else {
         if (calYear === ty && calMonth === tm && d === td) cell.classList.add('today');
         if (selectedDay && selectedDay.d === d && selectedDay.m === calMonth && selectedDay.y === calYear) cell.classList.add('selected');
-        cell.onclick = () => { selectedDay = { d, m: calMonth, y: calYear }; rebuildCartHours(calYear, calMonth, d); renderCartCalendar(); };
+        cell.onclick = () => {
+          selectedDay = { d, m: calMonth, y: calYear };
+          const isToday = calYear === now.getFullYear() && calMonth === now.getMonth() && d === now.getDate();
+          rebuildCartHours(isToday);
+          renderCartCalendar();
+        };
       }
       grid.appendChild(cell);
     }

@@ -686,6 +686,14 @@
     if (ampm === 'AM' && hour24 === 12) hour24 = 0;
     const selectedMs = new Date(selectedDay.y, selectedDay.m, selectedDay.d, hour24, parseInt(min)).getTime();
 
+    // Block past times if today is selected
+    if (selectedMs <= Date.now()) {
+      noteEl.textContent = 'That time has already passed — please select a future time.';
+      noteEl.style.color = '#c9705a';
+      closeCartPicker();
+      return;
+    }
+
     if (activePicker === 'return' && editPickupDate) {
       let ph = editPickupDate.h;
       if (editPickupDate.ampm === 'PM' && ph !== 12) ph += 12;

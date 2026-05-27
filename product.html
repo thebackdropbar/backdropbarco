@@ -737,6 +737,13 @@
     if (ampm === 'AM' && hour24 === 12) hour24 = 0;
     const selectedMins = new Date(selectedDay.y, selectedDay.m, selectedDay.d, hour24, parseInt(min)).getTime();
 
+    // Block past times if today is selected
+    if (selectedMins <= Date.now()) {
+      document.getElementById('rental-duration').textContent = 'That time has already passed — please select a future time.';
+      document.getElementById('rental-duration').style.color = '#c9705a';
+      return;
+    }
+
     // For return picker — must be at least 15 min after pickup
     if (activePicker === 'return' && pickupDate) {
       const pickupHourVal = document.getElementById('picker-hour').value;

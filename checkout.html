@@ -206,8 +206,8 @@
     <p style="font-size:0.75rem;color:#7a6a60;line-height:1.8;margin-bottom:24px;">We proudly serve the greater Bay Area. Your location appears to be outside our standard delivery area — but we'd love to find a way to make it work. Please reach out and we'll see what we can do.</p>
     <div style="display:flex;flex-direction:column;gap:10px;">
       <a href="mailto:info@backdropbarco.com" style="display:block;padding:13px;background:#3a2e28;color:white;border-radius:8px;text-decoration:none;font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;">Email Us</a>
-      <a href="tel:+10000000000" style="display:block;padding:13px;background:#3a2e28;color:white;border-radius:8px;text-decoration:none;font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;">Call Us</a>
-      <a href="sms:+10000000000" style="display:block;padding:13px;background:#3a2e28;color:white;border-radius:8px;text-decoration:none;font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;">Text Us</a>
+      <div style="display:block;padding:13px;background:#3a2e28;color:rgba(255,255,255,0.5);border-radius:8px;font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;text-align:center;">Call Us — Coming Soon</div>
+      <div style="display:block;padding:13px;background:#3a2e28;color:rgba(255,255,255,0.5);border-radius:8px;font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;text-align:center;">Text Us — Coming Soon</div>
     </div>
   </div>
 </div>
@@ -358,14 +358,11 @@
         box.style.display = 'block';
         features.forEach(f => {
           const p = f.properties;
-          // Only show results that start with what user typed (prefix match)
           const street = [p.housenumber, p.street || p.name].filter(Boolean).join(' ');
           const city   = p.city || p.town || p.village || '';
           const zip    = p.postcode || '';
           const label  = [street, city, p.state].filter(Boolean).join(', ');
-
-          if (!label.toLowerCase().startsWith(val.toLowerCase()) &&
-              !street.toLowerCase().startsWith(val.toLowerCase())) return;
+          if (!label) return;
 
           const item = document.createElement('div');
           item.style = 'padding:11px 16px;font-size:0.75rem;color:#3a2e28;cursor:pointer;border-bottom:1px solid rgba(201,180,154,0.15);line-height:1.4;';
@@ -476,8 +473,11 @@
   const TAX_RATE = 0.09875;
   const DAMAGE_HOLD = 175.00;
 
-  // ── Load cart and render summary
+  // ── Load cart and redirect if empty
   const cart = JSON.parse(localStorage.getItem('tbb_cart') || '[]');
+  if (cart.length === 0) { window.location.href = 'cart.html'; }
+
+  let orderTotalCached = 0; // stores total for error recovery
 
   function renderSummary() {
     const itemsEl   = document.getElementById('summaryItems');
@@ -526,20 +526,8 @@
       </div>`;
 
     depositEl.textContent = '$' + orderTotal.toFixed(2);
+    orderTotalCached = orderTotal;
     document.getElementById('payBtn').textContent = `Pay $${orderTotal.toFixed(2)} Now`;
-  }
-
-  function isWithin48Hours() {
-    // Check if any item's pickup date is within 48 hours
-    for (const item of cart) {
-      if (item.pickupDate) {
-        const pickup = new Date(item.pickupDate.y, item.pickupDate.m, item.pickupDate.d);
-        const now = new Date();
-        const diffHrs = (pickup - now) / (1000 * 60 * 60);
-        if (diffHrs <= 48) return true;
-      }
-    }
-    return false;
   }
 
   renderSummary();
@@ -799,7 +787,7 @@
     } catch (err) {
       errorEl.textContent = 'Something went wrong. Please try again.';
       btn.disabled = false;
-      btn.textContent = 'Pay Deposit Now';
+      btn.textContent = orderTotalCached > 0 ? `Pay $${orderTotalCached.toFixed(2)} Now` : 'Pay Now';
     }
   }
 </script>

@@ -536,7 +536,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           orderNumber: new URLSearchParams(window.location.search).get('order') || 'TBB-UNKNOWN',
-          customerEmail: item.email || 'Customer',
+          customerEmail: (window._orderData && window._orderData.customerEmail) || new URLSearchParams(window.location.search).get('email') || '',
           currentPickup: item.pickup || '—',
           currentReturn: item.ret || '—',
           newPickup: pu,

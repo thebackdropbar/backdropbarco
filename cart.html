@@ -87,7 +87,9 @@
     .cart-item {
       display: grid;
       grid-template-columns: 100px 1fr auto;
-      gap: 18px;
+      grid-template-rows: auto auto;
+      column-gap: 18px;
+      row-gap: 0;
       align-items: start;
       background: white;
       border: 1px solid rgba(201,180,154,0.25);
@@ -96,13 +98,49 @@
     }
 
     .cart-item-img {
+      grid-column: 1;
+      grid-row: 1 / 3;
       width: 100px; height: 130px;
       border-radius: 8px; overflow: hidden;
       background: var(--parchment); flex-shrink: 0;
     }
+
+    /* Footer row: duration (left) + remove (right), spans cols 2-3 */
+    .cart-item-footer {
+      grid-column: 2 / 4;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 10px;
+      margin-top: 6px;
+      border-top: 1px solid rgba(201,180,154,0.1);
+    }
+
+    .edit-dates-btn {
+      background: none; border: none; cursor: pointer;
+      font-size: 0.6rem; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--warm-tan); padding: 4px 0; margin-top: 5px;
+      display: inline-block; text-decoration: underline;
+      text-underline-offset: 2px; transition: color 0.2s;
+    }
+    .edit-dates-btn:hover { color: var(--text-dark); }
     .cart-item-img svg { width: 100%; height: 100%; display: block; }
 
-    .cart-item-details { display: flex; flex-direction: column; gap: 8px; justify-content: space-between; }
+    .cart-item-details { display: flex; flex-direction: column; gap: 8px; }
+
+    /* Remove button — now lives in footer row */
+    .cart-remove {
+      font-size: 0.58rem; letter-spacing: 0.1em;
+      color: var(--text-soft);
+      background: none; border: none; cursor: pointer;
+      transition: color 0.2s; padding: 4px 0;
+    }
+    .cart-remove:hover { color: #b05a5a; }
+
+    .cart-item-duration {
+      font-size: 0.68rem; letter-spacing: 0.1em;
+      color: var(--text-soft);
+    }
 
     .cart-item-name {
       font-family: 'Cormorant Garamond', serif;
@@ -121,13 +159,9 @@
       font-size: 0.76rem; color: var(--text-mid);
     }
     .cart-item-date-row svg { width: 13px; height: 13px; stroke: var(--warm-tan); flex-shrink: 0; }
-    .cart-item-duration {
-      font-size: 0.68rem; letter-spacing: 0.1em;
-      color: var(--text-soft); margin-top: 4px;
-    }
     .cart-item-price {
       font-size: 1.05rem; font-weight: 300;
-      color: var(--text-dark); margin-top: 6px;
+      color: var(--text-dark); margin-top: 2px;
     }
 
     .cart-item-right {
@@ -156,17 +190,6 @@
       border-left: 1px solid rgba(201,180,154,0.35);
       border-right: 1px solid rgba(201,180,154,0.35);
     }
-
-    /* Remove button */
-    .cart-remove {
-      font-size: 0.58rem; letter-spacing: 0.1em;
-      color: var(--text-soft);
-      background: none; border: none; cursor: pointer;
-      transition: color 0.2s; padding: 4px;
-      width: 96px; height: 32px;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .cart-remove:hover { color: #b05a5a; }
 
     .cart-item-subtotal {
       font-size: 0.9rem; font-weight: 300; color: var(--text-dark);
@@ -249,12 +272,92 @@
       border-radius: 6px;
     }
 
+    /* ── EDIT DATES MODAL ── */
+    .edit-modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 600;
+      background: rgba(58,46,40,0.45);
+      align-items: center; justify-content: center;
+    }
+    .edit-modal-overlay.open { display: flex; }
+    .edit-modal-box {
+      background: white; border-radius: 16px; padding: 28px;
+      width: 360px; max-width: 92vw;
+      box-shadow: 0 12px 48px rgba(58,46,40,0.15);
+    }
+    .edit-modal-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 20px;
+    }
+    .edit-modal-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.15rem; font-weight: 300; color: var(--text-dark);
+    }
+    .edit-modal-close {
+      background: none; border: none; cursor: pointer;
+      font-size: 1.1rem; color: var(--text-soft);
+    }
+    .edit-date-label {
+      font-size: 0.6rem; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--text-soft); margin-bottom: 6px;
+    }
+    .edit-date-field {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 13px;
+      border: 1px solid rgba(201,180,154,0.45); border-radius: 8px;
+      cursor: pointer; background: white; transition: border-color 0.2s;
+      margin-bottom: 14px;
+    }
+    .edit-date-field:hover { border-color: var(--warm-tan); }
+    .edit-date-field.filled { border-color: var(--warm-tan); }
+    .edit-date-field span { font-size: 0.72rem; color: var(--text-mid); }
+    .edit-date-field.filled span { color: var(--text-dark); }
+    .edit-save-btn {
+      width: 100%; padding: 13px; background: var(--text-dark); color: white;
+      border: none; border-radius: 10px; font-family: 'Jost', sans-serif;
+      font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase;
+      cursor: pointer; margin-top: 4px; transition: background 0.25s;
+    }
+    .edit-save-btn:hover { background: var(--text-mid); }
+
+    /* ── CALENDAR PICKER (shared) ── */
+    .picker-overlay {
+      display: none; position: fixed; inset: 0; z-index: 700;
+      background: rgba(58,46,40,0.35);
+      align-items: center; justify-content: center;
+    }
+    .picker-overlay.open { display: flex; }
+    .picker-popup {
+      background: white; border-radius: 16px; padding: 24px;
+      width: 300px; max-width: 92vw;
+      box-shadow: 0 12px 48px rgba(58,46,40,0.15);
+    }
+    .picker-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .picker-title-lbl { font-size: 0.62rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--text-soft); }
+    .picker-close-btn { background: none; border: none; cursor: pointer; font-size: 1.1rem; color: var(--text-soft); }
+    .cal-nav-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .cal-nav-btn { background: none; border: none; cursor: pointer; font-size: 1.1rem; color: var(--text-mid); padding: 4px 10px; }
+    .cal-month-lbl { font-family: 'Cormorant Garamond', serif; font-size: 1rem; font-weight: 300; color: var(--text-dark); }
+    .cal-days-header { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; margin-bottom: 6px; }
+    .cal-day-lbl { text-align: center; font-size: 0.58rem; letter-spacing: 0.1em; color: var(--text-soft); padding: 3px 0; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; margin-bottom: 16px; }
+    .cal-day { text-align: center; padding: 7px 2px; font-size: 0.75rem; border-radius: 6px; cursor: pointer; color: var(--text-mid); transition: background 0.15s; }
+    .cal-day:hover:not(.disabled):not(.empty) { background: rgba(201,180,154,0.2); }
+    .cal-day.selected { background: var(--text-dark); color: white; }
+    .cal-day.today { color: var(--text-dark); font-weight: 400; }
+    .cal-day.disabled { color: rgba(201,180,154,0.4); cursor: default; }
+    .cal-day.empty { cursor: default; }
+    .picker-confirm-btn {
+      width: 100%; padding: 13px; background: var(--text-dark); color: white;
+      border: none; border-radius: 10px; font-family: 'Jost', sans-serif;
+      font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer;
+    }
+
     /* ── RESPONSIVE ── */
     @media (max-width: 768px) {
       .cart-page { grid-template-columns: 1fr; padding: 28px 16px 60px; gap: 28px; }
       .order-summary { position: static; }
       .top-nav { padding: 14px 20px; }
-      .cart-item { grid-template-columns: 72px 1fr auto; gap: 12px; padding: 14px; }
+      .cart-item { grid-template-columns: 72px 1fr auto; column-gap: 12px; padding: 14px; }
       .cart-item-img { width: 72px; height: 88px; }
     }
   </style>
@@ -272,6 +375,62 @@
   <a href="index.html" class="top-nav-logo">the backdrop bar</a>
   <div style="width:60px;"></div>
 </nav>
+
+<!-- ── EDIT DATES MODAL ── -->
+<div class="edit-modal-overlay" id="editModalOverlay">
+  <div class="edit-modal-box">
+    <div class="edit-modal-header">
+      <div class="edit-modal-title">Edit Rental Dates</div>
+      <button class="edit-modal-close" onclick="closeEditModal()">✕</button>
+    </div>
+    <div class="edit-date-label">Needed By</div>
+    <div class="edit-date-field" id="editPickupField" onclick="openEditPicker('pickup')">
+      <span id="editPickupDisplay">Select date &amp; time</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a99589" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    </div>
+    <div class="edit-date-label">Return By</div>
+    <div class="edit-date-field" id="editReturnField" onclick="openEditPicker('return')">
+      <span id="editReturnDisplay">Select date &amp; time</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a99589" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    </div>
+    <div id="editDurationNote" style="font-size:0.65rem;color:var(--text-soft);min-height:18px;margin-bottom:14px;"></div>
+    <button class="edit-save-btn" onclick="saveEditDates()">Update Dates</button>
+  </div>
+</div>
+
+<!-- ── CALENDAR PICKER POPUP ── -->
+<div class="picker-overlay" id="cartPickerOverlay">
+  <div class="picker-popup">
+    <div class="picker-header">
+      <span class="picker-title-lbl" id="cartPickerTitle"></span>
+      <button class="picker-close-btn" onclick="closeCartPicker()">✕</button>
+    </div>
+    <div class="cal-nav-row">
+      <button class="cal-nav-btn" onclick="changeCartMonth(-1)">‹</button>
+      <div class="cal-month-lbl" id="cartCalMonthLabel"></div>
+      <button class="cal-nav-btn" onclick="changeCartMonth(1)">›</button>
+    </div>
+    <div class="cal-days-header">
+      <div class="cal-day-lbl">Su</div><div class="cal-day-lbl">Mo</div>
+      <div class="cal-day-lbl">Tu</div><div class="cal-day-lbl">We</div>
+      <div class="cal-day-lbl">Th</div><div class="cal-day-lbl">Fr</div>
+      <div class="cal-day-lbl">Sa</div>
+    </div>
+    <div class="cal-grid" id="cartCalGrid"></div>
+    <div style="border-top:1px solid rgba(201,180,154,0.2);padding-top:14px;margin-bottom:14px;">
+      <div style="font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-soft);margin-bottom:10px;">Time</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <select id="cartPickerHour" style="flex:1;padding:8px 10px;border:1px solid rgba(201,180,154,0.5);border-radius:8px;font-family:'Jost',sans-serif;font-size:0.78rem;color:var(--text-dark);background:white;"></select>
+        <span style="color:var(--text-soft);">:</span>
+        <select id="cartPickerMin" style="flex:1;padding:8px 10px;border:1px solid rgba(201,180,154,0.5);border-radius:8px;font-family:'Jost',sans-serif;font-size:0.78rem;color:var(--text-dark);background:white;">
+          <option value="00">00</option><option value="15">15</option>
+          <option value="30">30</option><option value="45">45</option>
+        </select>
+      </div>
+    </div>
+    <button class="picker-confirm-btn" onclick="confirmCartPicker()">Confirm</button>
+  </div>
+</div>
 
 <!-- ── CART PAGE ── -->
 <div class="cart-page" id="cartPage">
@@ -301,59 +460,14 @@
 </div>
 
 <script>
-  const TAX_RATE = 0.09875;
-  const DELIVERY_RATE = 2.50; // $2.50 per mile from Fremont
-  const FREMONT_CENTER = { lat: 37.5485, lng: -121.9886 };
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const now = new Date();
 
-  // Approximate miles from Fremont center by ZIP (precomputed)
-  const ZIP_MILES = {
-    '94536':0,'94537':0,'94538':1,'94539':2,'94555':3,
-    '94541':4,'94542':4,'94543':4,'94544':4,'94545':5,'94546':7,
-    '94601':12,'94602':12,'94603':13,'94604':12,'94605':12,'94606':13,
-    '94607':14,'94608':13,'94609':13,'94610':13,'94611':12,'94612':14,
-    '94613':13,'94618':13,'94619':12,'94621':13,
-    '94701':15,'94702':15,'94703':15,'94704':15,'94705':14,'94706':16,
-    '94707':16,'94708':16,'94709':15,'94710':15,'94720':15,
-    '94577':6,'94578':7,'94579':7,'94580':6,'94587':4,'94560':3,
-    '94501':10,'94502':9,
-    '95035':8,'95036':8,
-    '95101':18,'95110':18,'95112':18,'95113':18,'95116':19,'95117':20,
-    '95118':21,'95119':22,'95120':23,'95121':20,'95122':19,'95123':22,
-    '95124':21,'95125':19,'95126':19,'95127':20,'95128':20,'95129':21,
-    '95130':21,'95131':19,'95132':20,'95133':19,'95134':18,'95135':21,
-    '95136':22,'95138':22,'95139':23,'95148':21,
-    '95050':20,'95051':21,'95052':20,'95053':20,'95054':18,'95055':20,
-    '94085':24,'94086':24,'94087':25,'94088':24,'94089':23,
-    '94040':27,'94041':27,'94042':27,'94043':26,
-    '94301':28,'94302':28,'94303':27,'94304':28,'94305':29,'94306':28,
-    '94061':30,'94062':31,'94063':29,'94064':30,'94065':28,
-    '94401':32,'94402':31,'94403':30,'94404':29,
-    '94010':34,'94030':35,'94066':35,'94080':36,
-    '94014':38,'94015':38,'94016':38,'94017':38,
-    '94102':38,'94103':38,'94104':39,'94105':38,'94107':37,'94108':39,
-    '94109':39,'94110':38,'94111':39,'94112':38,'94114':38,'94115':39,
-    '94116':39,'94117':39,'94118':39,'94121':40,'94122':40,'94123':40,
-    '94124':37,'94127':39,'94129':41,'94130':37,'94131':38,'94132':40,
-    '94133':40,'94134':37,'94158':37,
-    '94568':13,'94566':14,'94550':18,'94551':20,
-    '94582':16,'94583':15,'94526':18,
-    '94595':19,'94596':19,'94597':19,'94598':19,
-    '94518':20,'94519':20,'94520':21,'94521':21,'94522':21,'94523':22,
-    '94801':20,'94802':20,'94803':19,'94804':19,'94805':20,'94806':20,
-    '94509':25,'94531':24,'94565':24,'94513':28,
-    '94556':18,'94563':20,'94549':18,
-    '95014':25,'95015':25,'95008':22,'95009':22,
-    '95030':26,'95031':26,'95032':25,'95033':28,
-    '94022':28,'94023':28,'94024':27,'94025':29,'94026':29,
-    '94002':32,'94070':31
-  };
-
-  // Bay Area ZIPs only
-  const BAY_AREA_ZIPS = new Set(Object.keys(ZIP_MILES));
-
-  function getMilesForZip(zip) {
-    return ZIP_MILES[zip.trim()] ?? null;
-  }
+  // ── Date Edit State
+  let editItemIdx = null;
+  let activePicker = null;
+  let calYear = now.getFullYear(), calMonth = now.getMonth(), selectedDay = null;
+  let editPickupDate = null, editReturnDate = null;
 
   function loadCart() { return JSON.parse(localStorage.getItem('tbb_cart') || '[]'); }
   function saveCart(cart) { localStorage.setItem('tbb_cart', JSON.stringify(cart)); }
@@ -405,7 +519,7 @@
               <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
               <span>Return: ${item.ret !== 'Select date & time' ? item.ret : '—'}</span>
             </div>
-            ${item.duration ? `<div class="cart-item-duration">${item.duration}</div>` : ''}
+            <button class="edit-dates-btn" onclick="openEditModal(${idx})">Edit Dates</button>
           </div>
           <div class="cart-item-price">$${item.price} <span style="font-size:0.62rem;color:var(--text-soft);">/ day</span></div>
         </div>
@@ -417,15 +531,18 @@
           </div>
           <div class="cart-item-subtotal">
             <span>Subtotal</span>
-            $${(item.price * item.qty).toFixed(2)}
+            $${(item.price * item.qty * days).toFixed(2)}
           </div>
+        </div>
+        <div class="cart-item-footer">
+          <div class="cart-item-duration">${item.duration || ''}</div>
           <button class="cart-remove" onclick="removeItem(${idx})">Remove</button>
         </div>`;
       itemsEl.appendChild(div);
 
       const row = document.createElement('div');
       row.className = 'summary-row';
-      row.innerHTML = `<span>${item.title} × ${item.qty}</span><span>$${(item.price * item.qty).toFixed(2)}</span>`;
+      row.innerHTML = `<span>${item.title} × ${item.qty} (${days}d)</span><span>$${(item.price * item.qty * days).toFixed(2)}</span>`;
       rowsEl.appendChild(row);
     });
 
@@ -458,6 +575,185 @@
     cart.splice(idx, 1);
     saveCart(cart); render();
   }
+
+  // ── Build hour options 7am–9pm
+  document.addEventListener('DOMContentLoaded', function() {
+    const h = document.getElementById('cartPickerHour');
+    const slots = [
+      {v:'07',a:'AM'},{v:'08',a:'AM'},{v:'09',a:'AM'},{v:'10',a:'AM'},{v:'11',a:'AM'},
+      {v:'12',a:'PM'},{v:'01',a:'PM'},{v:'02',a:'PM'},{v:'03',a:'PM'},{v:'04',a:'PM'},
+      {v:'05',a:'PM'},{v:'06',a:'PM'},{v:'07',a:'PM'},{v:'08',a:'PM'},{v:'09',a:'PM'}
+    ];
+    slots.forEach(s => {
+      const o = document.createElement('option');
+      o.value = s.v + '|' + s.a;
+      o.textContent = `${parseInt(s.v)} ${s.a}`;
+      h.appendChild(o);
+    });
+    h.value = '09|AM';
+  });
+
+  // ── Edit Dates Modal
+  function openEditModal(idx) {
+    editItemIdx = idx;
+    const cart = loadCart();
+    const item = cart[idx];
+    const hasPickup = item.pickup && item.pickup !== 'Select date & time';
+    const hasReturn = item.ret && item.ret !== 'Select date & time';
+
+    document.getElementById('editPickupDisplay').textContent = hasPickup ? item.pickup : 'Select date & time';
+    document.getElementById('editReturnDisplay').textContent = hasReturn ? item.ret : 'Select date & time';
+    document.getElementById('editPickupField').classList.toggle('filled', hasPickup);
+    document.getElementById('editReturnField').classList.toggle('filled', hasReturn);
+    document.getElementById('editDurationNote').textContent = item.duration || '';
+    document.getElementById('editDurationNote').style.color = 'var(--text-soft)';
+
+    editPickupDate = null;
+    editReturnDate = null;
+    document.getElementById('editModalOverlay').classList.add('open');
+  }
+
+  function closeEditModal() {
+    document.getElementById('editModalOverlay').classList.remove('open');
+    editItemIdx = null;
+  }
+
+  function openEditPicker(type) {
+    activePicker = type;
+    calYear = now.getFullYear();
+    calMonth = now.getMonth();
+    selectedDay = null;
+    document.getElementById('cartPickerTitle').textContent = type === 'pickup' ? 'Needed By' : 'Return By';
+    document.getElementById('cartPickerOverlay').classList.add('open');
+    renderCartCalendar();
+  }
+
+  function closeCartPicker() {
+    document.getElementById('cartPickerOverlay').classList.remove('open');
+    activePicker = null;
+  }
+
+  function changeCartMonth(delta) {
+    calMonth += delta;
+    if (calMonth > 11) { calMonth = 0; calYear++; }
+    if (calMonth < 0)  { calMonth = 11; calYear--; }
+    renderCartCalendar();
+  }
+
+  function renderCartCalendar() {
+    document.getElementById('cartCalMonthLabel').textContent = `${MONTHS[calMonth]} ${calYear}`;
+    const grid = document.getElementById('cartCalGrid');
+    grid.innerHTML = '';
+    const firstDay = new Date(calYear, calMonth, 1).getDay();
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    const td = now.getDate(), tm = now.getMonth(), ty = now.getFullYear();
+
+    for (let i = 0; i < firstDay; i++) {
+      const e = document.createElement('div'); e.className = 'cal-day empty'; grid.appendChild(e);
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+      const cell = document.createElement('div');
+      cell.className = 'cal-day';
+      cell.textContent = d;
+      const isPast = (calYear < ty) || (calYear === ty && calMonth < tm) || (calYear === ty && calMonth === tm && d < td);
+      if (activePicker === 'return' && editPickupDate) {
+        const pd = new Date(editPickupDate.y, editPickupDate.m, editPickupDate.d);
+        if (new Date(calYear, calMonth, d) < pd) { cell.classList.add('disabled'); grid.appendChild(cell); continue; }
+      }
+      if (isPast) {
+        cell.classList.add('disabled');
+      } else {
+        if (calYear === ty && calMonth === tm && d === td) cell.classList.add('today');
+        if (selectedDay && selectedDay.d === d && selectedDay.m === calMonth && selectedDay.y === calYear) cell.classList.add('selected');
+        cell.onclick = () => { selectedDay = { d, m: calMonth, y: calYear }; renderCartCalendar(); };
+      }
+      grid.appendChild(cell);
+    }
+  }
+
+  function confirmCartPicker() {
+    if (!selectedDay) { alert('Please select a date.'); return; }
+    const hourVal = document.getElementById('cartPickerHour').value;
+    const [h, ampm] = hourVal.split('|');
+    const min = document.getElementById('cartPickerMin').value;
+    const dateStr = `${MONTHS[selectedDay.m]} ${selectedDay.d}, ${selectedDay.y}`;
+    const timeStr = `${parseInt(h)}:${min} ${ampm}`;
+    const display = `${dateStr} at ${timeStr}`;
+    const noteEl = document.getElementById('editDurationNote');
+
+    let hour24 = parseInt(h);
+    if (ampm === 'PM' && hour24 !== 12) hour24 += 12;
+    if (ampm === 'AM' && hour24 === 12) hour24 = 0;
+    const selectedMs = new Date(selectedDay.y, selectedDay.m, selectedDay.d, hour24, parseInt(min)).getTime();
+
+    if (activePicker === 'return' && editPickupDate) {
+      let ph = editPickupDate.h;
+      if (editPickupDate.ampm === 'PM' && ph !== 12) ph += 12;
+      if (editPickupDate.ampm === 'AM' && ph === 12) ph = 0;
+      const pickupMs = new Date(editPickupDate.y, editPickupDate.m, editPickupDate.d, ph, editPickupDate.min).getTime();
+      if (selectedMs < pickupMs + 15 * 60 * 1000) {
+        noteEl.textContent = 'Return must be at least 15 minutes after pickup.';
+        noteEl.style.color = '#c9705a';
+        closeCartPicker();
+        return;
+      }
+    }
+
+    if (activePicker === 'pickup') {
+      editPickupDate = { ...selectedDay, h: parseInt(h), min: parseInt(min), ampm };
+      document.getElementById('editPickupDisplay').textContent = display;
+      document.getElementById('editPickupField').classList.add('filled');
+      if (editReturnDate) {
+        editReturnDate = null;
+        document.getElementById('editReturnDisplay').textContent = 'Select date & time';
+        document.getElementById('editReturnField').classList.remove('filled');
+        noteEl.textContent = '';
+      }
+    } else {
+      editReturnDate = { ...selectedDay };
+      document.getElementById('editReturnDisplay').textContent = display;
+      document.getElementById('editReturnField').classList.add('filled');
+      if (editPickupDate) {
+        const d1 = new Date(editPickupDate.y, editPickupDate.m, editPickupDate.d);
+        const d2 = new Date(selectedDay.y, selectedDay.m, selectedDay.d);
+        const diff = Math.round((d2 - d1) / 86400000);
+        noteEl.textContent = diff === 0 ? 'Same-day rental' : `Rental duration: ${diff} day${diff !== 1 ? 's' : ''}`;
+        noteEl.style.color = 'var(--text-soft)';
+      }
+    }
+    closeCartPicker();
+  }
+
+  function saveEditDates() {
+    const noteEl = document.getElementById('editDurationNote');
+    const pickup = document.getElementById('editPickupDisplay').textContent;
+    const ret = document.getElementById('editReturnDisplay').textContent;
+    if (pickup === 'Select date & time') {
+      noteEl.textContent = 'Please select a pickup date.';
+      noteEl.style.color = '#c9705a';
+      return;
+    }
+    if (ret === 'Select date & time') {
+      noteEl.textContent = 'Please select a return date.';
+      noteEl.style.color = '#c9705a';
+      return;
+    }
+    const cart = loadCart();
+    cart[editItemIdx].pickup = pickup;
+    cart[editItemIdx].ret = ret;
+    cart[editItemIdx].duration = noteEl.textContent;
+    saveCart(cart);
+    closeEditModal();
+    render();
+  }
+
+  // Close modals on overlay click
+  document.getElementById('editModalOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeEditModal();
+  });
+  document.getElementById('cartPickerOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeCartPicker();
+  });
 
   render();
 </script>

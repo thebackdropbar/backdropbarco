@@ -904,6 +904,17 @@
     if (badge && total > 0) { badge.textContent = total; badge.style.display = 'flex'; }
   })();
 
+  function parseDisplayTime(display) {
+    const m = display.match(/(\w+ \d+, \d+) at (\d+):(\d+) (AM|PM)/);
+    if (!m) return null;
+    let h = parseInt(m[2]);
+    if (m[4] === 'PM' && h !== 12) h += 12;
+    if (m[4] === 'AM' && h === 12) h = 0;
+    const d = new Date(m[1]);
+    d.setHours(h, parseInt(m[3]), 0, 0);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
   function addToCart() {
     // Validate dates are selected
     const pickup = document.getElementById('pickup-display').textContent;
@@ -923,6 +934,32 @@
       return;
     }
 
+    // Check pickup time hasn't passed since selection
+    const pickupDt = parseDisplayTime(pickup);
+    if (pickupDt && pickupDt <= new Date()) {
+      document.getElementById('pickup-field').style.borderColor = '#c9705a';
+      document.getElementById('rental-duration').textContent = 'Your pickup time has passed — please select a new date and time.';
+      document.getElementById('rental-duration').style.color = '#c9705a';
+      document.getElementById('pickup-field').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      pickupDate = null;
+      returnDate = null;
+      document.getElementById('pickup-display').textContent = 'Select date & time';
+      document.getElementById('return-display').textContent = 'Select date & time';
+      document.getElementById('pickup-field').classList.remove('filled');
+      document.getElementById('return-field').classList.remove('filled');
+      return;
+    }
+
+    // Validate variant is selected if variant buttons exist
+    const variantButtons = document.querySelectorAll('.variant-btn');
+    const variantBtn = document.querySelector('.variant-btn.selected');
+    if (variantButtons.length > 0 && !variantBtn) {
+      document.getElementById('rental-duration').textContent = 'Please select a style option before adding to cart.';
+      document.getElementById('rental-duration').style.color = '#c9705a';
+      return;
+    }
+    const variant = variantBtn ? variantBtn.textContent.trim() : '';
+
     // Reset border colors
     document.getElementById('pickup-field').style.borderColor = '';
     document.getElementById('return-field').style.borderColor = '';
@@ -930,8 +967,6 @@
     const title    = document.getElementById('productTitle').textContent;
     const priceStr = document.getElementById('productPrice').textContent.trim().split(' ')[0];
     const price    = parseFloat(priceStr.replace('$',''));
-    const variantBtn = document.querySelector('.variant-btn.selected');
-    const variant  = variantBtn ? variantBtn.textContent : '';
     const duration = document.getElementById('rental-duration').textContent;
     const imgHTML  = document.getElementById('mainImageContent').innerHTML;
 

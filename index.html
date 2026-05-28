@@ -131,6 +131,7 @@
       gap: 12px; flex-wrap: nowrap;
       max-width: 860px;
       margin: 0 auto;
+      scroll-margin-top: 72px;
     }
     .cat-btn {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -616,7 +617,7 @@
   </div>
 
   <div class="back-to-top">
-    <a href="#backdrops" onclick="scrollToSection('backdrops');return false;">
+    <a href="#backdrops" onclick="scrollWithOffset('backdrops');return false;">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
       Back to Selections
     </a>
@@ -725,7 +726,7 @@
   </div>
 
   <div class="back-to-top">
-    <a href="#backdrops" onclick="scrollToSection('backdrops');return false;">
+    <a href="#backdrops" onclick="scrollWithOffset('backdrops');return false;">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
       Back to Selections
     </a>
@@ -772,7 +773,7 @@
   </div>
 
   <div class="back-to-top">
-    <a href="#backdrops" onclick="scrollToSection('backdrops');return false;">
+    <a href="#backdrops" onclick="scrollWithOffset('backdrops');return false;">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
       Back to Selections
     </a>
@@ -841,6 +842,14 @@
   <div style="max-width:640px;margin:56px auto 0;">
     <p style="font-size:0.6rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--text-soft);margin-bottom:24px;text-align:center;">Frequently Asked Questions</p>
     <div id="faqList" style="display:flex;flex-direction:column;gap:2px;"></div>
+  </div>
+
+  <!-- Back to Selections after How It Works -->
+  <div class="back-to-top" style="margin-top:48px;">
+    <a href="#backdrops" onclick="scrollWithOffset('backdrops');return false;">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+      Back to Selections
+    </a>
   </div>
 
 </section>
@@ -944,6 +953,14 @@
   function scrollToSection(id) {
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // Scroll with offset to account for sticky nav (~72px)
+  function scrollWithOffset(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const top = el.getBoundingClientRect().top + window.scrollY - 72;
+    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
   }
 
   // Sticky nav — adds scrolled class when past hero

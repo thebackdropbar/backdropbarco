@@ -452,7 +452,7 @@
       <strong>Subtotal</strong>
       <strong id="summaryTotal">$0.00</strong>
     </div>
-    <a href="checkout.html" class="checkout-btn">Proceed to Checkout</a>
+    <a href="checkout.html" class="checkout-btn" id="checkoutBtn" onclick="return validateCartDates()">Proceed to Checkout</a>
     <a href="index.html" class="continue-btn">Continue Shopping</a>
     <p class="summary-note">Full payment charged at checkout · CA sales tax applied</p>
   </div>
@@ -807,6 +807,32 @@
   document.getElementById('cartPickerOverlay').addEventListener('click', function(e) {
     if (e.target === this) closeCartPicker();
   });
+
+  function validateCartDates() {
+    const cart = loadCart();
+    const missing = cart.filter(i =>
+      !i.pickup || i.pickup === 'Select date & time' ||
+      !i.ret    || i.ret    === 'Select date & time'
+    );
+    if (missing.length > 0) {
+      alert('Please set rental dates for all items before checking out.\n\nClick "Edit Dates" on any item missing a date.');
+      return false;
+    }
+    const stale = cart.filter(i => {
+      const m = i.pickup && i.pickup.match(/(\w+ \d+, \d+) at (\d+):(\d+) (AM|PM)/);
+      if (!m) return false;
+      let h = parseInt(m[2]);
+      if (m[4] === 'PM' && h !== 12) h += 12;
+      if (m[4] === 'AM' && h === 12) h = 0;
+      const d = new Date(m[1]); d.setHours(h, parseInt(m[3]), 0, 0);
+      return d <= new Date();
+    });
+    if (stale.length > 0) {
+      alert('The pickup time has passed for one or more items. Please update the dates before checking out.');
+      return false;
+    }
+    return true;
+  }
 
   render();
 </script>

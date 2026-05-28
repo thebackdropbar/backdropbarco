@@ -472,6 +472,18 @@
   function loadCart() { return JSON.parse(localStorage.getItem('tbb_cart') || '[]'); }
   function saveCart(cart) { localStorage.setItem('tbb_cart', JSON.stringify(cart)); }
 
+  function parsePickupTime(display) {
+    const match = display.match(/(\w+ \d+, \d+) at (\d+):(\d+) (AM|PM)/);
+    if (!match) return null;
+    const [, dateStr, hours, mins, ampm] = match;
+    let h = parseInt(hours);
+    if (ampm === 'PM' && h !== 12) h += 12;
+    if (ampm === 'AM' && h === 12) h = 0;
+    const d = new Date(dateStr);
+    d.setHours(h, parseInt(mins), 0, 0);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
   function render() {
     const cart    = loadCart();
     const itemsEl = document.getElementById('cartItems');
@@ -576,36 +588,43 @@
     saveCart(cart); render();
   }
 
-  // ── Build hour options 7am–9pm
+  // ── Hour picker
   const CART_TIME_SLOTS = [
     {v:'07',a:'AM'},{v:'08',a:'AM'},{v:'09',a:'AM'},{v:'10',a:'AM'},{v:'11',a:'AM'},
     {v:'12',a:'PM'},{v:'01',a:'PM'},{v:'02',a:'PM'},{v:'03',a:'PM'},{v:'04',a:'PM'},
     {v:'05',a:'PM'},{v:'06',a:'PM'},{v:'07',a:'PM'},{v:'08',a:'PM'},{v:'09',a:'PM'}
   ];
   function cartSlotTo24(s) {
-    let h = parseInt(s.v);
+    var h = parseInt(s.v);
     if (s.a === 'PM' && h !== 12) h += 12;
     if (s.a === 'AM' && h === 12) h = 0;
     return h;
   }
   function rebuildCartHours(isToday) {
-    const el = document.getElementById('cartPickerHour');
-    const minHour = isToday ? now.getHours() + 1 : 0;
+    var el = document.getElementById('cartPickerHour');
+    if (!el) return;
+    var n = new Date();
+    var curH = n.getHours(), curM = n.getMinutes();
+    var LAST_BOOKING_HOUR = 20; // 8 PM — after 8:15 PM no same-day slots
+    var pastCutoff = isToday && (curH > LAST_BOOKING_HOUR || (curH === LAST_BOOKING_HOUR && curM > 15));
+    var minHour = isToday ? curH + 1 : 0;
     el.innerHTML = '';
-    CART_TIME_SLOTS.forEach(s => {
-      if (cartSlotTo24(s) < minHour) return;
-      const o = document.createElement('option');
-      o.value = s.v + '|' + s.a;
-      o.textContent = `${parseInt(s.v)} ${s.a}`;
-      el.appendChild(o);
-    });
+    if (!pastCutoff) {
+      CART_TIME_SLOTS.forEach(function(s) {
+        if (cartSlotTo24(s) < minHour) return;
+        var o = document.createElement('option');
+        o.value = s.v + '|' + s.a;
+        o.textContent = parseInt(s.v) + ' ' + s.a;
+        el.appendChild(o);
+      });
+    }
     if (el.options.length === 0) {
-      const o = document.createElement('option');
-      o.value = ''; o.textContent = 'No times left today — pick a future date';
+      var o = document.createElement('option');
+      o.value = '';
+      o.textContent = 'No available times today — please select a future date';
       el.appendChild(o);
     }
   }
-
   document.addEventListener('DOMContentLoaded', function() {
     rebuildCartHours(false);
   });
@@ -642,6 +661,7 @@
     selectedDay = null;
     document.getElementById('cartPickerTitle').textContent = type === 'pickup' ? 'Needed By' : 'Return By';
     document.getElementById('cartPickerOverlay').classList.add('open');
+    rebuildCartHours(true); // opens on current month — filter past times by default
     renderCartCalendar();
   }
 
@@ -654,6 +674,9 @@
     calMonth += delta;
     if (calMonth > 11) { calMonth = 0; calYear++; }
     if (calMonth < 0)  { calMonth = 11; calYear--; }
+    const isCurrentMonth = calYear === now.getFullYear() && calMonth === now.getMonth();
+    rebuildCartHours(isCurrentMonth);
+    selectedDay = null;
     renderCartCalendar();
   }
 

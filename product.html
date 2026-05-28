@@ -626,34 +626,46 @@
     {v:'12',a:'PM'},{v:'01',a:'PM'},{v:'02',a:'PM'},{v:'03',a:'PM'},{v:'04',a:'PM'},
     {v:'05',a:'PM'},{v:'06',a:'PM'},{v:'07',a:'PM'},{v:'08',a:'PM'},{v:'09',a:'PM'}
   ];
+
   function slotTo24(s) {
     let h = parseInt(s.v);
     if (s.a === 'PM' && h !== 12) h += 12;
     if (s.a === 'AM' && h === 12) h = 0;
     return h;
   }
+
+  // Rebuild hour dropdown. If isToday, uses new Date() live — never stale.
   function rebuildHours(isToday) {
     const el = document.getElementById('picker-hour');
-    const minHour = isToday ? now.getHours() + 1 : 0;
+    if (!el) return;
+    const n = new Date();
+    const curH = n.getHours(), curM = n.getMinutes();
+    const LAST_BOOKING_HOUR = 20; // 8 PM — after 8:15 PM no same-day slots
+    const pastCutoff = isToday && (curH > LAST_BOOKING_HOUR || (curH === LAST_BOOKING_HOUR && curM > 15));
+    const minHour = isToday ? curH + 1 : 0;
     el.innerHTML = '';
-    TIME_SLOTS.forEach(s => {
-      if (slotTo24(s) < minHour) return;
-      const o = document.createElement('option');
-      o.value = s.v + '|' + s.a;
-      o.textContent = `${parseInt(s.v)} ${s.a}`;
-      el.appendChild(o);
-    });
+    if (!pastCutoff) {
+      TIME_SLOTS.forEach(function(s) {
+        if (slotTo24(s) < minHour) return;
+        const o = document.createElement('option');
+        o.value = s.v + '|' + s.a;
+        o.textContent = parseInt(s.v) + ' ' + s.a;
+        el.appendChild(o);
+      });
+    }
     if (el.options.length === 0) {
       const o = document.createElement('option');
-      o.value = ''; o.textContent = 'No times left today — pick a future date';
+      o.value = '';
+      o.textContent = 'No available times today — please select a future date';
       el.appendChild(o);
     }
   }
 
-  // Build hour options — show all on load, filter when a day is selected
+  // Build initial list on load — show all hours (no day selected yet)
   document.addEventListener('DOMContentLoaded', function() {
     rebuildHours(false);
-    document.getElementById('picker-ampm').style.display = 'none';
+    const ampm = document.getElementById('picker-ampm');
+    if (ampm) ampm.style.display = 'none';
   });
 
   function openPicker(type) {
@@ -664,6 +676,7 @@
     document.getElementById('picker-title').textContent = type === 'pickup' ? 'Needed By' : 'Return By';
     document.getElementById('picker-overlay').style.display = 'block';
     document.getElementById('picker-popup').style.display  = 'block';
+    rebuildHours(true); // starts on current month — filter past times immediately
     renderCalendar();
   }
 
@@ -677,6 +690,9 @@
     calMonth += delta;
     if (calMonth > 11) { calMonth = 0; calYear++; }
     if (calMonth < 0)  { calMonth = 11; calYear--; }
+    selectedDay = null;
+    var isCurrentMonth = (calYear === now.getFullYear() && calMonth === now.getMonth());
+    rebuildHours(isCurrentMonth);
     renderCalendar();
   }
 
@@ -727,7 +743,7 @@
 
   function selectDay(d) {
     selectedDay = { d, m: calMonth, y: calYear };
-    const isToday = calYear === now.getFullYear() && calMonth === now.getMonth() && d === now.getDate();
+    var isToday = (calYear === now.getFullYear() && calMonth === now.getMonth() && d === now.getDate());
     rebuildHours(isToday);
     renderCalendar();
   }
@@ -825,6 +841,18 @@
     if (badge && total > 0) { badge.textContent = total; badge.style.display = 'flex'; }
   })();
 
+  function parsePickupTime(display) {
+    const match = display.match(/(\w+ \d+, \d+) at (\d+):(\d+) (AM|PM)/);
+    if (!match) return null;
+    const [, dateStr, hours, mins, ampm] = match;
+    let h = parseInt(hours);
+    if (ampm === 'PM' && h !== 12) h += 12;
+    if (ampm === 'AM' && h === 12) h = 0;
+    const d = new Date(dateStr);
+    d.setHours(h, parseInt(mins), 0, 0);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
   function addToCart() {
     // Validate dates are selected
     const pickup = document.getElementById('pickup-display').textContent;
@@ -841,6 +869,16 @@
       document.getElementById('return-field').style.borderColor = '#c9705a';
       document.getElementById('rental-duration').textContent = 'Please select a return date and time.';
       document.getElementById('rental-duration').style.color = '#c9705a';
+      return;
+    }
+
+    // Check if pickup time has since passed
+    const pickupDt = parsePickupTime(pickup);
+    if (pickupDt && pickupDt <= new Date()) {
+      document.getElementById('pickup-field').style.borderColor = '#c9705a';
+      document.getElementById('rental-duration').textContent = 'Your pickup time has passed — please select a new date and time.';
+      document.getElementById('rental-duration').style.color = '#c9705a';
+      document.getElementById('pickup-field').scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
 

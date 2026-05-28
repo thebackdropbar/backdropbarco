@@ -536,7 +536,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           orderNumber: new URLSearchParams(window.location.search).get('order') || 'TBB-UNKNOWN',
-          customerEmail: (window._orderData && window._orderData.customerEmail) || new URLSearchParams(window.location.search).get('email') || '',
+          customerEmail: item.email || 'Customer',
           currentPickup: item.pickup || '—',
           currentReturn: item.ret || '—',
           newPickup: pu,
@@ -588,8 +588,16 @@
       if (!res.ok || data.error) throw new Error(data.error || 'Request failed');
     } catch (e) {
       console.error('Cancellation email failed:', e);
-      // Still show success screen — don't block customer if email fails
     }
+
+    // Free up the dates in Supabase
+    try {
+      await fetch('/.netlify/functions/cancel-booking', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_number: payload.orderNumber })
+      });
+    } catch (e) { console.error('Booking cancel failed:', e); }
 
     document.getElementById('successIcon').textContent = '🤍';
     document.getElementById('successTitle').textContent = 'Reservation Cancelled';

@@ -777,6 +777,35 @@
       const total2 = subtotal2 + tax2;
       const orderNum = 'TBB-' + Date.now().toString().slice(-8);
 
+      // Parse display datetime string to ISO format for Supabase
+      function parseToISO(display) {
+        const m = display.match(/(\w+ \d+, \d+) at (\d+):(\d+) (AM|PM)/);
+        if (!m) return null;
+        let h = parseInt(m[2]);
+        if (m[4] === 'PM' && h !== 12) h += 12;
+        if (m[4] === 'AM' && h === 12) h = 0;
+        const d = new Date(m[1]);
+        d.setHours(h, parseInt(m[3]), 0, 0);
+        return d.toISOString();
+      }
+
+      // Save each cart item as a booking in Supabase
+      try {
+        await Promise.all(cart2.map(item =>
+          fetch('/.netlify/functions/create-booking', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              product_id: item.id ? String(item.id) : (item.title || 'unknown').toLowerCase().replace(/\s+/g, '-'),
+              order_number: orderNum,
+              pickup_datetime: parseToISO(item.pickup),
+              return_datetime: parseToISO(item.ret),
+              customer_email: email
+            })
+          })
+        ));
+      } catch(e) { console.error('Booking record failed:', e); }
+
       try {
         await fetch('/.netlify/functions/send-confirmation', {
           method: 'POST',

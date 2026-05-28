@@ -935,7 +935,8 @@
     const duration = document.getElementById('rental-duration').textContent;
     const imgHTML  = document.getElementById('mainImageContent').innerHTML;
 
-    const item = { title, price, variant, qty, pickup, ret, duration, imgHTML, id: Date.now() };
+    const productId = new URLSearchParams(window.location.search).get('product') || 'default';
+    const item = { title, price, variant, qty, pickup, ret, duration, imgHTML, id: Date.now(), productId };
 
     let cart = JSON.parse(localStorage.getItem('tbb_cart') || '[]');
     cart.push(item);

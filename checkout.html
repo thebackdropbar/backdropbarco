@@ -717,6 +717,38 @@
     errorEl.textContent = '';
 
     try {
+      // ── Final availability check before charging — prevents race conditions
+      function parseToISOLocal(display) {
+        const m = display.match(/(\w+ \d+, \d+) at (\d+):(\d+) (AM|PM)/);
+        if (!m) return null;
+        let h = parseInt(m[2]);
+        if (m[4] === 'PM' && h !== 12) h += 12;
+        if (m[4] === 'AM' && h === 12) h = 0;
+        const d = new Date(m[1]); d.setHours(h, parseInt(m[3]), 0, 0);
+        return d.toISOString();
+      }
+
+      for (const item of cart) {
+        const productId = item.productId || (item.title || 'unknown').toLowerCase().replace(/\s+/g, '-');
+        const pickupISO = parseToISOLocal(item.pickup);
+        const returnISO = parseToISOLocal(item.ret);
+        if (!pickupISO || !returnISO) continue;
+        try {
+          const avRes = await fetch('/.netlify/functions/check-availability', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ product_id: productId, pickup_datetime: pickupISO, return_datetime: returnISO, qty_requested: item.qty || 1 })
+          });
+          const avData = await avRes.json();
+          if (!avData.available) {
+            errorEl.textContent = `Sorry, "${item.title}" is no longer available for your selected dates. Please go back to cart and choose different dates.`;
+            btn.disabled = false;
+            btn.textContent = `Pay $${orderTotalCached > 0 ? orderTotalCached.toFixed(2) : ''} Now`;
+            return;
+          }
+        } catch(e) { /* fail open — don't block checkout if availability check fails */ }
+      }
+
       // Calculate subtotal multiplied by rental duration
       const subtotal = cart.reduce((s, i) => {
         const daysMatch = i.duration ? i.duration.match(/(\d+)\s*day/) : null;
@@ -796,7 +828,7 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              product_id: item.id ? String(item.id) : (item.title || 'unknown').toLowerCase().replace(/\s+/g, '-'),
+              product_id: item.productId || (item.title || 'unknown').toLowerCase().replace(/\s+/g, '-'),
               order_number: orderNum,
               pickup_datetime: parseToISO(item.pickup),
               return_datetime: parseToISO(item.ret),

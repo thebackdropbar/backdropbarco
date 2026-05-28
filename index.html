@@ -328,10 +328,19 @@
       width: 1px; height: 36px;
       background: rgba(201,180,154,0.4);
     }
+    .faq-toggle-btn {
+      -webkit-tap-highlight-color: transparent;
+      outline: none;
+      user-select: none;
+    }
+    .faq-toggle-btn:hover { background: transparent !important; }
+    .faq-toggle-btn:focus { outline: none; background: transparent; }
+    .faq-toggle-btn:active { background: transparent !important; }
     .step-num {
       font-family: 'Jost', sans-serif;
       font-size: 2.4rem;
       font-weight: 200;
+      font-variant-numeric: lining-nums;
       color: var(--blush);
       line-height: 1;
       margin-bottom: 16px;
@@ -404,13 +413,14 @@
 <!-- ═══════════════════════  NAV  ═══════════════════════ -->
 <nav style="justify-content: space-between; padding: 20px 28px;">
   <a href="#how" style="color:rgba(255,255,255,0.9);text-decoration:none;font-family:'Jost',sans-serif;font-size:0.65rem;font-weight:300;letter-spacing:0.2em;text-transform:uppercase;border:1px solid rgba(255,255,255,0.45);border-radius:50px;padding:7px 18px;transition:all 0.3s;backdrop-filter:blur(4px);background:rgba(255,255,255,0.08);" onmouseover="this.style.background='rgba(255,255,255,0.18)';this.style.borderColor='rgba(255,255,255,0.7)'" onmouseout="this.style.background='rgba(255,255,255,0.08)';this.style.borderColor='rgba(255,255,255,0.45)'">How It Works</a>
-  <a href="cart.html" class="nav-cart" aria-label="Cart" style="position:relative;">
+  <a href="cart.html" class="nav-cart" aria-label="Cart" style="position:relative;display:flex;align-items:center;gap:6px;">
     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
       <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
       <line x1="3" y1="6" x2="21" y2="6"/>
       <path d="M16 10a4 4 0 01-8 0"/>
     </svg>
-    <span id="cartBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:#d4a89a;color:white;border-radius:50%;width:16px;height:16px;font-size:9px;font-family:'Jost',sans-serif;font-weight:400;display:flex;align-items:center;justify-content:center;line-height:1;"></span>
+    <span id="cartBadge" style="display:none;position:absolute;top:-4px;left:20px;background:#d4a89a;color:white;border-radius:50%;width:16px;height:16px;font-size:9px;font-family:'Jost',sans-serif;font-weight:400;align-items:center;justify-content:center;line-height:1;"></span>
+    <span id="cartTotal" style="display:none;font-size:0.68rem;font-family:'Jost',sans-serif;font-weight:300;color:rgba(255,255,255,0.85);letter-spacing:0.05em;"></span>
   </a>
 </nav>
 
@@ -478,7 +488,7 @@
   <div class="category-label" id="section-backdrops">Backdrops <span>Collection</span></div>
 
   <!-- Card 1 — Blush Floral Arch -->
-  <div class="product-card" onclick="window.location='product.html'" style="cursor:pointer;">
+  <div class="product-card" onclick="window.location='product.html?from=backdrops'" style="cursor:pointer;">
     <div class="product-svg-wrap">
       <svg viewBox="0 0 400 530" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -528,7 +538,7 @@
         <rect x="80" y="220" width="240" height="310" fill="rgba(255,255,255,0.12)" rx="2"/>
       </svg>
     </div>
-    <div class="rent-overlay"><a href="product.html" class="rent-btn">Click to Order</a></div>
+    <div class="rent-overlay"><a href="product.html?from=backdrops" class="rent-btn">Click to Order</a></div>
     <div class="product-info">
       <div class="product-name">Blush Floral Arch Panel</div>
       <div class="product-price">From $85 / day</div>
@@ -536,7 +546,7 @@
   </div>
 
   <!-- Card 2 — Linen Textured Panel -->
-  <div class="product-card" onclick="window.location='product.html'" style="cursor:pointer;">
+  <div class="product-card" onclick="window.location='product.html?from=backdrops'" style="cursor:pointer;">
     <div class="product-svg-wrap">
       <svg viewBox="0 0 400 530" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -588,7 +598,7 @@
         <ellipse cx="200" cy="400" rx="16" ry="28" fill="rgba(188,165,145,0.18)" transform="rotate(-8 200 400)"/>
       </svg>
     </div>
-    <div class="rent-overlay"><a href="product.html" class="rent-btn">Click to Order</a></div>
+    <div class="rent-overlay"><a href="product.html?from=backdrops" class="rent-btn">Click to Order</a></div>
     <div class="product-info">
       <div class="product-name">Natural Linen Weave</div>
       <div class="product-price">From $65 / day</div>
@@ -605,7 +615,7 @@
   <div class="category-label" id="section-numbers">Numbers &amp; Letters <span>Collection</span></div>
 
   <!-- Card 3 — Dried Pampas Arch -->
-  <div class="product-card" onclick="window.location='product.html'" style="cursor:pointer;">
+  <div class="product-card" onclick="window.location='product.html?from=numbers'" style="cursor:pointer;">
     <div class="product-svg-wrap">
       <svg viewBox="0 0 400 530" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -653,7 +663,7 @@
         <rect x="60" y="200" width="280" height="330" fill="rgba(255,255,255,0.1)" rx="2"/>
       </svg>
     </div>
-    <div class="rent-overlay"><a href="product.html" class="rent-btn">Click to Order</a></div>
+    <div class="rent-overlay"><a href="product.html?from=numbers" class="rent-btn">Click to Order</a></div>
     <div class="product-info">
       <div class="product-name">Pampas Grass Arch</div>
       <div class="product-price">From $95 / day</div>
@@ -661,7 +671,7 @@
   </div>
 
   <!-- Card 4 — Ivory Silk Drape -->
-  <div class="product-card" onclick="window.location='product.html'" style="cursor:pointer;">
+  <div class="product-card" onclick="window.location='product.html?from=numbers'" style="cursor:pointer;">
     <div class="product-svg-wrap">
       <svg viewBox="0 0 400 530" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -697,7 +707,7 @@
         <circle cx="200" cy="22" r="6" fill="rgba(196,168,148,0.55)"/>
       </svg>
     </div>
-    <div class="rent-overlay"><a href="product.html" class="rent-btn">Click to Order</a></div>
+    <div class="rent-overlay"><a href="product.html?from=numbers" class="rent-btn">Click to Order</a></div>
     <div class="product-info">
       <div class="product-name">Ivory Silk Drape Panel</div>
       <div class="product-price">From $75 / day</div>
@@ -714,7 +724,7 @@
   <div class="category-label" id="section-neon">Neon Signs <span>Collection</span></div>
 
   <!-- Card 5 — Rose Garden Backdrop -->
-  <div class="product-card" onclick="window.location='product.html'" style="cursor:pointer;">
+  <div class="product-card" onclick="window.location='product.html?from=neon'" style="cursor:pointer;">
     <div class="product-svg-wrap">
       <svg viewBox="0 0 400 530" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -781,7 +791,7 @@
         <rect width="400" height="530" fill="rgba(255,252,248,0.12)"/>
       </svg>
     </div>
-    <div class="rent-overlay"><a href="product.html" class="rent-btn">Click to Order</a></div>
+    <div class="rent-overlay"><a href="product.html?from=neon" class="rent-btn">Click to Order</a></div>
     <div class="product-info">
       <div class="product-name">Garden Rose Full Panel</div>
       <div class="product-price">From $110 / day</div>
@@ -789,7 +799,7 @@
   </div>
 
   <!-- Card 6 — Terracotta Wash -->
-  <div class="product-card" onclick="window.location='product.html'" style="cursor:pointer;">
+  <div class="product-card" onclick="window.location='product.html?from=neon'" style="cursor:pointer;">
     <div class="product-svg-wrap">
       <svg viewBox="0 0 400 530" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -819,7 +829,7 @@
         <ellipse cx="320" cy="275" rx="15" ry="28" fill="rgba(255,244,232,0.14)" transform="rotate(18 320 275)"/>
       </svg>
     </div>
-    <div class="rent-overlay"><a href="product.html" class="rent-btn">Click to Order</a></div>
+    <div class="rent-overlay"><a href="product.html?from=neon" class="rent-btn">Click to Order</a></div>
     <div class="product-info">
       <div class="product-name">Terracotta Plaster Wash</div>
       <div class="product-price">From $70 / day</div>
@@ -878,6 +888,26 @@
     </div>
   </div>
 
+  <!-- What's Included -->
+  <div style="max-width:720px;margin:56px auto 0;text-align:center;">
+    <p style="font-size:0.6rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--text-soft);margin-bottom:20px;">What's Included With Every Rental</p>
+    <div style="display:grid;grid-template-columns:repeat(3,auto);justify-content:center;gap:12px;">
+      <div style="padding:10px 20px;background:white;border:1px solid rgba(201,180,154,0.35);border-radius:50px;font-size:0.72rem;color:var(--text-mid);font-family:'Jost',sans-serif;font-weight:300;letter-spacing:0.04em;white-space:nowrap;">Delivery to your venue</div>
+      <div style="padding:10px 20px;background:white;border:1px solid rgba(201,180,154,0.35);border-radius:50px;font-size:0.72rem;color:var(--text-mid);font-family:'Jost',sans-serif;font-weight:300;letter-spacing:0.04em;white-space:nowrap;">Full setup on arrival</div>
+      <div style="padding:10px 20px;background:white;border:1px solid rgba(201,180,154,0.35);border-radius:50px;font-size:0.72rem;color:var(--text-mid);font-family:'Jost',sans-serif;font-weight:300;letter-spacing:0.04em;white-space:nowrap;">Pickup after your event</div>
+      <div style="grid-column:1/-1;display:flex;justify-content:center;gap:12px;">
+        <div style="padding:10px 20px;background:white;border:1px solid rgba(201,180,154,0.35);border-radius:50px;font-size:0.72rem;color:var(--text-mid);font-family:'Jost',sans-serif;font-weight:300;letter-spacing:0.04em;white-space:nowrap;">Booking confirmation email</div>
+        <div style="padding:10px 20px;background:white;border:1px solid rgba(201,180,154,0.35);border-radius:50px;font-size:0.72rem;color:var(--text-mid);font-family:'Jost',sans-serif;font-weight:300;letter-spacing:0.04em;white-space:nowrap;">$175 refundable damage hold</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div style="max-width:640px;margin:56px auto 0;">
+    <p style="font-size:0.6rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--text-soft);margin-bottom:24px;text-align:center;">Frequently Asked Questions</p>
+    <div id="faqList" style="display:flex;flex-direction:column;gap:2px;"></div>
+  </div>
+
 </section>
 
 <!-- ═══════════════════════  CONTACT  ═══════════════════ -->
@@ -885,7 +915,7 @@
   <p style="font-size:0.65rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--text-soft);margin-bottom:12px;">Get in Touch</p>
   <h2 style="font-family:'Cormorant Garamond',serif;font-size:clamp(1.8rem,4vw,2.6rem);font-weight:300;color:var(--text-dark);margin-bottom:10px;">We'd Love to Hear From You</h2>
   <div style="width:36px;height:1px;background:var(--warm-tan);margin:0 auto 28px;"></div>
-  <p style="font-size:0.78rem;color:var(--text-soft);max-width:420px;margin:0 auto 36px;line-height:1.8;">Whether you have a question, need a custom quote, or just want to chat about your event — we're here.</p>
+  <p style="font-size:0.78rem;color:var(--text-soft);max-width:420px;margin:0 auto 36px;line-height:1.8;">Whether you have a question, need a custom quote, or just want to chat about your event, we're here.</p>
 
   <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;">
 
@@ -928,19 +958,76 @@
 </footer>
 
 <script>
+  // ── FAQ
+  const FAQS = [
+    { q: 'How far in advance should I book?', a: 'We recommend booking at least 1 week before your event to guarantee availability. For weddings and larger events, 2 to 4 weeks ahead is ideal. That said, we do accept last-minute orders subject to availability.' },
+    { q: 'Is delivery and setup included?', a: 'Yes, every rental includes delivery, full setup at your venue, and pickup after your event.' },
+    { q: 'What is the damage hold?', a: 'A $175 pre-authorization is placed on your card at booking. This is not a charge, it will be released in full within 5 to 7 business days after your items are returned in good condition.' },
+    { q: 'What happens if something gets damaged?', a: 'Minor damage is assessed on a case by case basis. If damage occurs, we will capture part or all of the $175 hold to cover repair or cleaning costs. Significant damage beyond the hold amount will be invoiced separately. Full details are in the rental agreement.' },
+    { q: 'What is your cancellation policy?', a: 'Cancellations 10 or more days before your event receive a full refund. Cancellations between 2 and 10 days receive a 50% refund. Cancellations within 48 hours of your event are non-refundable.' },
+    { q: 'Where do you deliver?', a: 'We deliver across the greater Bay Area, including San Jose, San Francisco, Oakland, Fremont, Hayward, Berkeley, Walnut Creek, Pleasanton, Livermore, and surrounding cities.' },
+    { q: 'Can I extend my rental last minute?', a: 'Extensions are subject to availability. Contact us as early as possible and we will do our best to accommodate. Pricing adjustments for additional days will be handled directly.' },
+  ];
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const faqList = document.getElementById('faqList');
+    if (!faqList) return;
+    FAQS.forEach(function(faq, i) {
+      const item = document.createElement('div');
+      item.style.borderTop = '1px solid rgba(201,180,154,0.2)';
+      item.innerHTML =
+        '<button class="faq-toggle-btn" onclick="toggleFaq(' + i + ')" style="width:100%;text-align:left;background:none;border:none;padding:18px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;">' +
+          '<span style="font-family:\'Jost\',sans-serif;font-size:0.8rem;font-weight:300;color:var(--text-dark);letter-spacing:0.02em;text-align:left;">' + faq.q + '</span>' +
+          '<svg id="faq-icon-' + i + '" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c9b49a" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;transition:transform 0.25s;"><path d="M6 9l6 6 6-6"/></svg>' +
+        '</button>' +
+        '<div id="faq-body-' + i + '" style="display:none;padding:0 0 18px;margin:0;text-align:left;">' +
+          '<p style="font-size:0.76rem;color:var(--text-soft);line-height:1.9;font-weight:300;margin:0;padding:0;text-align:left;">' + faq.a + '</p>' +
+        '</div>';
+      faqList.appendChild(item);
+    });
+    const last = document.createElement('div');
+    last.style.borderTop = '1px solid rgba(201,180,154,0.2)';
+    faqList.appendChild(last);
+  });
+
+  function toggleFaq(i) {
+    const body = document.getElementById('faq-body-' + i);
+    const icon = document.getElementById('faq-icon-' + i);
+    const isOpen = body.style.display === 'block';
+    FAQS.forEach(function(_, j) {
+      document.getElementById('faq-body-' + j).style.display = 'none';
+      document.getElementById('faq-icon-' + j).style.transform = '';
+    });
+    if (!isOpen) {
+      body.style.display = 'block';
+      icon.style.transform = 'rotate(180deg)';
+    }
+  }
+</script>
+
+<script>
   function scrollToSection(id) {
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  // Cart badge
+  // Cart badge + running total
   function updateCartBadge() {
     const cart = JSON.parse(localStorage.getItem('tbb_cart') || '[]');
-    const total = cart.reduce((sum, i) => sum + i.qty, 0);
+    const count = cart.reduce((s, i) => s + i.qty, 0);
     const badge = document.getElementById('cartBadge');
+    const totalEl = document.getElementById('cartTotal');
     if (badge) {
-      if (total > 0) { badge.textContent = total; badge.style.display = 'flex'; }
-      else { badge.style.display = 'none'; }
+      if (count > 0) { badge.textContent = count; badge.style.display = 'flex'; }
+      else badge.style.display = 'none';
+    }
+    if (totalEl) {
+      const subtotal = cart.reduce((s, i) => {
+        const d = i.duration ? (i.duration.match(/(\d+)\s*day/) || [])[1] : 1;
+        return s + i.price * i.qty * (parseInt(d) || 1);
+      }, 0);
+      totalEl.textContent = subtotal > 0 ? `$${subtotal.toFixed(0)}` : '';
+      totalEl.style.display = subtotal > 0 ? 'inline' : 'none';
     }
   }
   updateCartBadge();

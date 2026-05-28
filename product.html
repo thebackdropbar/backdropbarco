@@ -621,6 +621,8 @@
 
   const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
+  // Build hour options
+  // ── Time slots 7 AM to 9 PM
   const TIME_SLOTS = [
     {v:'07',a:'AM'},{v:'08',a:'AM'},{v:'09',a:'AM'},{v:'10',a:'AM'},{v:'11',a:'AM'},
     {v:'12',a:'PM'},{v:'01',a:'PM'},{v:'02',a:'PM'},{v:'03',a:'PM'},{v:'04',a:'PM'},
@@ -634,14 +636,14 @@
     return h;
   }
 
-  // Rebuild hour dropdown. If isToday, uses new Date() live — never stale.
+  // Rebuild hour dropdown — always reads live new Date() so it's never stale
   function rebuildHours(isToday) {
     const el = document.getElementById('picker-hour');
     if (!el) return;
-    const n = new Date();
-    const curH = n.getHours(), curM = n.getMinutes();
-    const LAST_BOOKING_HOUR = 20; // 8 PM — after 8:15 PM no same-day slots
-    const pastCutoff = isToday && (curH > LAST_BOOKING_HOUR || (curH === LAST_BOOKING_HOUR && curM > 15));
+    const cur = new Date();
+    const curH = cur.getHours(), curM = cur.getMinutes();
+    const CUTOFF_H = 20, CUTOFF_M = 15; // after 8:15 PM no same-day bookings
+    const pastCutoff = isToday && (curH > CUTOFF_H || (curH === CUTOFF_H && curM > CUTOFF_M));
     const minHour = isToday ? curH + 1 : 0;
     el.innerHTML = '';
     if (!pastCutoff) {
@@ -656,19 +658,42 @@
     if (el.options.length === 0) {
       const o = document.createElement('option');
       o.value = '';
-      o.textContent = 'No available times today — please select a future date';
+      o.textContent = 'No times available today';
       el.appendChild(o);
+    }
+    // Disable time selectors until a day is actually selected
+    const minEl = document.getElementById('picker-min');
+    if (!selectedDay) {
+      el.disabled = true;
+      if (minEl) minEl.disabled = true;
+      el.style.opacity = '0.4';
+      if (minEl) minEl.style.opacity = '0.4';
+    } else {
+      el.disabled = false;
+      if (minEl) minEl.disabled = false;
+      el.style.opacity = '1';
+      if (minEl) minEl.style.opacity = '1';
     }
   }
 
-  // Build initial list on load — show all hours (no day selected yet)
   document.addEventListener('DOMContentLoaded', function() {
+    // Build with all hours on load (no day selected yet — will be filtered when day is picked)
     rebuildHours(false);
-    const ampm = document.getElementById('picker-ampm');
-    if (ampm) ampm.style.display = 'none';
+    // Start disabled until a day is selected
+    const el = document.getElementById('picker-hour');
+    const minEl = document.getElementById('picker-min');
+    if (el) { el.disabled = true; el.style.opacity = '0.4'; }
+    if (minEl) { minEl.disabled = true; minEl.style.opacity = '0.4'; }
+    document.getElementById('picker-ampm').style.display = 'none';
   });
 
   function openPicker(type) {
+    // Block return picker until pickup is confirmed
+    if (type === 'return' && !pickupDate) {
+      document.getElementById('rental-duration').textContent = 'Please select a pickup date first.';
+      document.getElementById('rental-duration').style.color = '#c9705a';
+      return;
+    }
     activePicker = type;
     calYear  = now.getFullYear();
     calMonth = now.getMonth();
@@ -676,7 +701,7 @@
     document.getElementById('picker-title').textContent = type === 'pickup' ? 'Needed By' : 'Return By';
     document.getElementById('picker-overlay').style.display = 'block';
     document.getElementById('picker-popup').style.display  = 'block';
-    rebuildHours(true); // starts on current month — filter past times immediately
+    rebuildHours(true); // opens on current month — filter immediately
     renderCalendar();
   }
 
@@ -691,7 +716,7 @@
     if (calMonth > 11) { calMonth = 0; calYear++; }
     if (calMonth < 0)  { calMonth = 11; calYear--; }
     selectedDay = null;
-    var isCurrentMonth = (calYear === now.getFullYear() && calMonth === now.getMonth());
+    const isCurrentMonth = (calYear === now.getFullYear() && calMonth === now.getMonth());
     rebuildHours(isCurrentMonth);
     renderCalendar();
   }
@@ -743,7 +768,7 @@
 
   function selectDay(d) {
     selectedDay = { d, m: calMonth, y: calYear };
-    var isToday = (calYear === now.getFullYear() && calMonth === now.getMonth() && d === now.getDate());
+    const isToday = (calYear === now.getFullYear() && calMonth === now.getMonth() && d === now.getDate());
     rebuildHours(isToday);
     renderCalendar();
   }
@@ -841,18 +866,6 @@
     if (badge && total > 0) { badge.textContent = total; badge.style.display = 'flex'; }
   })();
 
-  function parsePickupTime(display) {
-    const match = display.match(/(\w+ \d+, \d+) at (\d+):(\d+) (AM|PM)/);
-    if (!match) return null;
-    const [, dateStr, hours, mins, ampm] = match;
-    let h = parseInt(hours);
-    if (ampm === 'PM' && h !== 12) h += 12;
-    if (ampm === 'AM' && h === 12) h = 0;
-    const d = new Date(dateStr);
-    d.setHours(h, parseInt(mins), 0, 0);
-    return isNaN(d.getTime()) ? null : d;
-  }
-
   function addToCart() {
     // Validate dates are selected
     const pickup = document.getElementById('pickup-display').textContent;
@@ -869,16 +882,6 @@
       document.getElementById('return-field').style.borderColor = '#c9705a';
       document.getElementById('rental-duration').textContent = 'Please select a return date and time.';
       document.getElementById('rental-duration').style.color = '#c9705a';
-      return;
-    }
-
-    // Check if pickup time has since passed
-    const pickupDt = parsePickupTime(pickup);
-    if (pickupDt && pickupDt <= new Date()) {
-      document.getElementById('pickup-field').style.borderColor = '#c9705a';
-      document.getElementById('rental-duration').textContent = 'Your pickup time has passed — please select a new date and time.';
-      document.getElementById('rental-duration').style.color = '#c9705a';
-      document.getElementById('pickup-field').scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
 

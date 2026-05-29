@@ -182,6 +182,7 @@
     .back-to-top svg { width: 12px; height: 12px; stroke: currentColor; }
 
     .category-label {
+      scroll-margin-top: 80px;
       grid-column: 1 / -1;
       padding: 18px 4px 6px;
       font-family: 'Cormorant Garamond', serif;
@@ -320,6 +321,7 @@
 
     /* ─── HOW IT WORKS ───────────────────────────────────── */
     .how-section {
+      scroll-margin-top: 80px;
       padding: 80px 60px;
       text-align: center;
       max-width: 900px;
@@ -423,7 +425,7 @@
 
 <!-- ═══════════════════════  NAV  ═══════════════════════ -->
 <nav style="justify-content: space-between; padding: 20px 28px;">
-  <a href="#how" class="how-it-works-link" style="color:rgba(255,255,255,0.9);text-decoration:none;font-family:'Jost',sans-serif;font-size:0.65rem;font-weight:300;letter-spacing:0.2em;text-transform:uppercase;border:1px solid rgba(255,255,255,0.45);border-radius:50px;padding:7px 18px;transition:all 0.3s;backdrop-filter:blur(4px);background:rgba(255,255,255,0.08);" onmouseover="this.style.background='rgba(255,255,255,0.18)';this.style.borderColor='rgba(255,255,255,0.7)'" onmouseout="this.style.background='rgba(255,255,255,0.08)';this.style.borderColor='rgba(255,255,255,0.45)'">How It Works</a>
+  <a href="#how" onclick="scrollWithOffset('how');return false;" class="how-it-works-link" style="color:rgba(255,255,255,0.9);text-decoration:none;font-family:'Jost',sans-serif;font-size:0.65rem;font-weight:300;letter-spacing:0.2em;text-transform:uppercase;border:1px solid rgba(255,255,255,0.45);border-radius:50px;padding:7px 18px;transition:all 0.3s;backdrop-filter:blur(4px);background:rgba(255,255,255,0.08);" onmouseover="this.style.background='rgba(255,255,255,0.18)';this.style.borderColor='rgba(255,255,255,0.7)'" onmouseout="this.style.background='rgba(255,255,255,0.08)';this.style.borderColor='rgba(255,255,255,0.45)'">How It Works</a>
   <a href="cart.html" class="nav-cart" aria-label="Cart" style="position:relative;display:flex;align-items:center;gap:6px;">
     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
       <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
@@ -457,23 +459,23 @@
 <section class="categories" id="backdrops">
 
   <!-- Backdrops — arch icon -->
-  <a class="cat-btn" href="#section-backdrops" onclick="scrollToSection('section-backdrops')">
+  <a class="cat-btn" href="#section-backdrops" onclick="scrollWithOffset('section-backdrops')">
     <span class="cat-icon">
       <svg width="38" height="46" viewBox="0 0 38 46" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M5 46 L5 19 Q5 2 19 2 Q33 2 33 19 L33 46" stroke="#c0a48a" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
       </svg>
     </span>
-    <span class="cat-label">Backdrops</span>
+    <span class="cat-label">Flower Walls</span>
   </a>
 
   <!-- Numbers & Letters — "1 2 3" text -->
-  <a class="cat-btn" href="#section-numbers" onclick="scrollToSection('section-numbers')">
+  <a class="cat-btn" href="#section-numbers" onclick="scrollWithOffset('section-numbers')">
     <span class="cat-icon" style="font-family:'Cormorant Garamond',serif;font-size:1.55rem;color:#b8987e;font-weight:300;letter-spacing:0.14em;line-height:1;">1 2 3</span>
     <span class="cat-label">Numbers &amp; Letters</span>
   </a>
 
   <!-- Neon Signs — heart outline -->
-  <a class="cat-btn" href="#section-neon" onclick="scrollToSection('section-neon')">
+  <a class="cat-btn" href="#section-neon" onclick="scrollWithOffset('section-neon')">
     <span class="cat-icon">
       <svg width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M19 30 C19 30 3 20 3 10 C3 5.5 6.5 2 11 2 C14.2 2 17 3.9 19 6.5 C21 3.9 23.8 2 27 2 C31.5 2 35 5.5 35 10 C35 20 19 30 19 30Z"
@@ -496,123 +498,75 @@
 <!-- ═══════════════════  PRODUCT GRID  ══════════════════ -->
 <section class="product-grid">
 
-  <div class="category-label" id="section-backdrops">Backdrops <span>Collection</span></div>
+  <div class="category-label" id="section-backdrops">Flower Walls <span>Collection</span></div>
 
-  <!-- Card 1 — Blush Floral Arch -->
-  <div class="product-card" onclick="window.location='product.html?product=blush-floral-arch&from=backdrops'" style="cursor:pointer;">
-    <div class="product-svg-wrap">
-      <svg viewBox="0 0 400 530" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="bg1" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#f0e4d8"/>
-            <stop offset="100%" stop-color="#e8d4c4"/>
-          </linearGradient>
-        </defs>
-        <rect width="400" height="530" fill="url(#bg1)"/>
-        <!-- arch outline -->
-        <path d="M80 530 L80 220 Q80 60 200 60 Q320 60 320 220 L320 530" stroke="rgba(180,150,130,0.35)" stroke-width="1.5" fill="rgba(255,255,255,0.15)"/>
-        <!-- floral clusters top -->
-        <circle cx="200" cy="72" r="32" fill="rgba(232,207,194,0.6)"/>
-        <ellipse cx="200" cy="40" rx="7" ry="14" fill="rgba(245,225,210,0.7)" transform="rotate(0 200 72)"/>
-        <ellipse cx="200" cy="40" rx="7" ry="14" fill="rgba(240,220,205,0.65)" transform="rotate(45 200 72)"/>
-        <ellipse cx="200" cy="40" rx="7" ry="14" fill="rgba(235,215,200,0.65)" transform="rotate(90 200 72)"/>
-        <ellipse cx="200" cy="40" rx="7" ry="14" fill="rgba(245,222,208,0.68)" transform="rotate(135 200 72)"/>
-        <ellipse cx="200" cy="40" rx="7" ry="14" fill="rgba(240,218,204,0.68)" transform="rotate(180 200 72)"/>
-        <ellipse cx="200" cy="40" rx="7" ry="14" fill="rgba(242,220,206,0.65)" transform="rotate(225 200 72)"/>
-        <ellipse cx="200" cy="40" rx="7" ry="14" fill="rgba(238,216,202,0.65)" transform="rotate(270 200 72)"/>
-        <ellipse cx="200" cy="40" rx="7" ry="14" fill="rgba(244,222,208,0.65)" transform="rotate(315 200 72)"/>
-        <circle cx="200" cy="72" r="12" fill="rgba(210,175,158,0.75)"/>
-        <!-- side florals left -->
-        <circle cx="82" cy="175" r="22" fill="rgba(225,196,182,0.55)"/>
-        <ellipse cx="82" cy="153" rx="5" ry="11" fill="rgba(240,218,208,0.65)" transform="rotate(0 82 175)"/>
-        <ellipse cx="82" cy="153" rx="5" ry="11" fill="rgba(240,218,208,0.65)" transform="rotate(60 82 175)"/>
-        <ellipse cx="82" cy="153" rx="5" ry="11" fill="rgba(240,218,208,0.65)" transform="rotate(120 82 175)"/>
-        <ellipse cx="82" cy="153" rx="5" ry="11" fill="rgba(240,218,208,0.65)" transform="rotate(180 82 175)"/>
-        <ellipse cx="82" cy="153" rx="5" ry="11" fill="rgba(240,218,208,0.65)" transform="rotate(240 82 175)"/>
-        <ellipse cx="82" cy="153" rx="5" ry="11" fill="rgba(240,218,208,0.65)" transform="rotate(300 82 175)"/>
-        <circle cx="82" cy="175" r="8" fill="rgba(196,160,144,0.7)"/>
-        <!-- side florals right -->
-        <circle cx="318" cy="195" r="20" fill="rgba(220,192,178,0.5)"/>
-        <ellipse cx="318" cy="175" rx="5" ry="10" fill="rgba(238,215,205,0.6)" transform="rotate(30 318 195)"/>
-        <ellipse cx="318" cy="175" rx="5" ry="10" fill="rgba(238,215,205,0.6)" transform="rotate(90 318 195)"/>
-        <ellipse cx="318" cy="175" rx="5" ry="10" fill="rgba(238,215,205,0.6)" transform="rotate(150 318 195)"/>
-        <ellipse cx="318" cy="175" rx="5" ry="10" fill="rgba(238,215,205,0.6)" transform="rotate(210 318 195)"/>
-        <ellipse cx="318" cy="175" rx="5" ry="10" fill="rgba(238,215,205,0.6)" transform="rotate(270 318 195)"/>
-        <ellipse cx="318" cy="175" rx="5" ry="10" fill="rgba(238,215,205,0.6)" transform="rotate(330 318 195)"/>
-        <circle cx="318" cy="195" r="7" fill="rgba(192,155,138,0.7)"/>
-        <!-- leaves scattered -->
-        <ellipse cx="150" cy="110" rx="10" ry="22" fill="rgba(190,175,150,0.35)" transform="rotate(-30 150 110)"/>
-        <ellipse cx="255" cy="95"  rx="9"  ry="18" fill="rgba(195,178,154,0.32)" transform="rotate(25 255 95)"/>
-        <ellipse cx="110" cy="230" rx="8"  ry="16" fill="rgba(188,172,148,0.3)"  transform="rotate(-20 110 230)"/>
-        <ellipse cx="298" cy="142" rx="8"  ry="14" fill="rgba(192,175,152,0.28)" transform="rotate(15 298 142)"/>
-        <!-- inner texture -->
-        <rect x="80" y="220" width="240" height="310" fill="rgba(255,255,255,0.12)" rx="2"/>
-      </svg>
+  <!-- Flower Wall: Red Rose -->
+  <div class="product-card" onclick="window.location='product.html?product=red-rose-wall&from=backdrops'" style="cursor:pointer;">
+    <div class="product-card-img">
+      <div style="width:100%;height:100%;background:linear-gradient(135deg,#8b0000,#c41e3a);display:flex;align-items:center;justify-content:center;">
+        <span style="font-family:'Jost',sans-serif;font-size:0.65rem;letter-spacing:0.2em;color:rgba(255,255,255,0.7);text-transform:uppercase;">Photo Coming Soon</span>
+      </div>
     </div>
-    <div class="rent-overlay"><a href="product.html?product=blush-floral-arch&from=backdrops" class="rent-btn">Click to Order</a></div>
+    <div class="rent-overlay"><a href="product.html?product=red-rose-wall&from=backdrops" class="rent-btn">Click to Order</a></div>
     <div class="product-info">
-      <div class="product-name">Blush Floral Arch Panel</div>
-      <div class="product-price">From $85 / day</div>
+      <div class="product-name">Red Rose Flower Wall</div>
+      <div class="product-price">$500 / day</div>
     </div>
   </div>
 
-  <!-- Card 2 — Linen Textured Panel -->
-  <div class="product-card" onclick="window.location='product.html?product=linen-weave&from=backdrops'" style="cursor:pointer;">
-    <div class="product-svg-wrap">
-      <svg viewBox="0 0 400 530" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#ede0d0"/>
-            <stop offset="100%" stop-color="#ddd0be"/>
-          </linearGradient>
-          <filter id="noise2">
-            <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/>
-            <feColorMatrix type="saturate" values="0"/>
-            <feBlend in="SourceGraphic" mode="multiply" result="blend"/>
-            <feComposite in="blend" in2="SourceGraphic" operator="in"/>
-          </filter>
-        </defs>
-        <rect width="400" height="530" fill="url(#bg2)"/>
-        <!-- linen texture lines -->
-        <g stroke="rgba(180,160,138,0.12)" stroke-width="1">
-          <line x1="0" y1="20"  x2="400" y2="20"/>  <line x1="0" y1="40"  x2="400" y2="40"/>
-          <line x1="0" y1="60"  x2="400" y2="60"/>  <line x1="0" y1="80"  x2="400" y2="80"/>
-          <line x1="0" y1="100" x2="400" y2="100"/> <line x1="0" y1="120" x2="400" y2="120"/>
-          <line x1="0" y1="140" x2="400" y2="140"/> <line x1="0" y1="160" x2="400" y2="160"/>
-          <line x1="0" y1="180" x2="400" y2="180"/> <line x1="0" y1="200" x2="400" y2="200"/>
-          <line x1="0" y1="220" x2="400" y2="220"/> <line x1="0" y1="240" x2="400" y2="240"/>
-          <line x1="0" y1="260" x2="400" y2="260"/> <line x1="0" y1="280" x2="400" y2="280"/>
-          <line x1="0" y1="300" x2="400" y2="300"/> <line x1="0" y1="320" x2="400" y2="320"/>
-          <line x1="0" y1="340" x2="400" y2="340"/> <line x1="0" y1="360" x2="400" y2="360"/>
-          <line x1="0" y1="380" x2="400" y2="380"/> <line x1="0" y1="400" x2="400" y2="400"/>
-          <line x1="0" y1="420" x2="400" y2="420"/> <line x1="0" y1="440" x2="400" y2="440"/>
-          <line x1="0" y1="460" x2="400" y2="460"/> <line x1="0" y1="480" x2="400" y2="480"/>
-          <line x1="0" y1="500" x2="400" y2="500"/> <line x1="0" y1="520" x2="400" y2="520"/>
-          <line x1="20"  y1="0" x2="20"  y2="530"/> <line x1="40"  y1="0" x2="40"  y2="530"/>
-          <line x1="60"  y1="0" x2="60"  y2="530"/> <line x1="80"  y1="0" x2="80"  y2="530"/>
-          <line x1="100" y1="0" x2="100" y2="530"/> <line x1="120" y1="0" x2="120" y2="530"/>
-          <line x1="140" y1="0" x2="140" y2="530"/> <line x1="160" y1="0" x2="160" y2="530"/>
-          <line x1="180" y1="0" x2="180" y2="530"/> <line x1="200" y1="0" x2="200" y2="530"/>
-          <line x1="220" y1="0" x2="220" y2="530"/> <line x1="240" y1="0" x2="240" y2="530"/>
-          <line x1="260" y1="0" x2="260" y2="530"/> <line x1="280" y1="0" x2="280" y2="530"/>
-          <line x1="300" y1="0" x2="300" y2="530"/> <line x1="320" y1="0" x2="320" y2="530"/>
-          <line x1="340" y1="0" x2="340" y2="530"/> <line x1="360" y1="0" x2="360" y2="530"/>
-          <line x1="380" y1="0" x2="380" y2="530"/>
-        </g>
-        <!-- oval frame -->
-        <ellipse cx="200" cy="265" rx="130" ry="180" stroke="rgba(165,140,118,0.3)" stroke-width="1.5" fill="rgba(255,255,255,0.08)"/>
-        <ellipse cx="200" cy="265" rx="110" ry="158" stroke="rgba(165,140,118,0.18)" stroke-width="1" fill="none"/>
-        <!-- subtle botanical print -->
-        <ellipse cx="200" cy="128" rx="18" ry="32" fill="rgba(190,168,148,0.25)" transform="rotate(-10 200 128)"/>
-        <ellipse cx="200" cy="128" rx="18" ry="32" fill="rgba(190,168,148,0.2)" transform="rotate(10 200 128)"/>
-        <ellipse cx="200" cy="400" rx="16" ry="28" fill="rgba(188,165,145,0.2)" transform="rotate(5 200 400)"/>
-        <ellipse cx="200" cy="400" rx="16" ry="28" fill="rgba(188,165,145,0.18)" transform="rotate(-8 200 400)"/>
-      </svg>
+  <!-- Flower Wall: Blush Pink -->
+  <div class="product-card" onclick="window.location='product.html?product=blush-pink-wall&from=backdrops'" style="cursor:pointer;">
+    <div class="product-card-img">
+      <div style="width:100%;height:100%;background:linear-gradient(135deg,#f4b8c1,#e8889a);display:flex;align-items:center;justify-content:center;">
+        <span style="font-family:'Jost',sans-serif;font-size:0.65rem;letter-spacing:0.2em;color:rgba(255,255,255,0.8);text-transform:uppercase;">Photo Coming Soon</span>
+      </div>
     </div>
-    <div class="rent-overlay"><a href="product.html?product=linen-weave&from=backdrops" class="rent-btn">Click to Order</a></div>
+    <div class="rent-overlay"><a href="product.html?product=blush-pink-wall&from=backdrops" class="rent-btn">Click to Order</a></div>
     <div class="product-info">
-      <div class="product-name">Natural Linen Weave</div>
-      <div class="product-price">From $65 / day</div>
+      <div class="product-name">Blush Pink Flower Wall</div>
+      <div class="product-price">$500 / day</div>
+    </div>
+  </div>
+
+  <!-- Flower Wall: Baby Blue -->
+  <div class="product-card" onclick="window.location='product.html?product=baby-blue-wall&from=backdrops'" style="cursor:pointer;">
+    <div class="product-card-img">
+      <div style="width:100%;height:100%;background:linear-gradient(135deg,#89c4e1,#5ba4cf);display:flex;align-items:center;justify-content:center;">
+        <span style="font-family:'Jost',sans-serif;font-size:0.65rem;letter-spacing:0.2em;color:rgba(255,255,255,0.8);text-transform:uppercase;">Photo Coming Soon</span>
+      </div>
+    </div>
+    <div class="rent-overlay"><a href="product.html?product=baby-blue-wall&from=backdrops" class="rent-btn">Click to Order</a></div>
+    <div class="product-info">
+      <div class="product-name">Baby Blue Flower Wall</div>
+      <div class="product-price">$500 / day</div>
+    </div>
+  </div>
+
+  <!-- Flower Wall: Garden Mix -->
+  <div class="product-card" onclick="window.location='product.html?product=garden-mix-wall&from=backdrops'" style="cursor:pointer;">
+    <div class="product-card-img">
+      <div style="width:100%;height:100%;background:linear-gradient(135deg,#a8d5a2,#f0a500);display:flex;align-items:center;justify-content:center;">
+        <span style="font-family:'Jost',sans-serif;font-size:0.65rem;letter-spacing:0.2em;color:rgba(255,255,255,0.8);text-transform:uppercase;">Photo Coming Soon</span>
+      </div>
+    </div>
+    <div class="rent-overlay"><a href="product.html?product=garden-mix-wall&from=backdrops" class="rent-btn">Click to Order</a></div>
+    <div class="product-info">
+      <div class="product-name">Garden Mix Flower Wall</div>
+      <div class="product-price">$500 / day</div>
+    </div>
+  </div>
+
+  <!-- Flower Wall: White Blossom -->
+  <div class="product-card" onclick="window.location='product.html?product=white-blossom-wall&from=backdrops'" style="cursor:pointer;">
+    <div class="product-card-img">
+      <div style="width:100%;height:100%;background:linear-gradient(135deg,#f5f5f5,#e8e0d8);display:flex;align-items:center;justify-content:center;">
+        <span style="font-family:'Jost',sans-serif;font-size:0.65rem;letter-spacing:0.2em;color:rgba(150,130,118,0.7);text-transform:uppercase;">Photo Coming Soon</span>
+      </div>
+    </div>
+    <div class="rent-overlay"><a href="product.html?product=white-blossom-wall&from=backdrops" class="rent-btn">Click to Order</a></div>
+    <div class="product-info">
+      <div class="product-name">White Blossom Flower Wall</div>
+      <div class="product-price">$500 / day</div>
     </div>
   </div>
 
@@ -624,105 +578,8 @@
   </div>
 
   <div class="category-label" id="section-numbers">Numbers &amp; Letters <span>Collection</span></div>
-
-  <!-- Card 3 — Dried Pampas Arch -->
-  <div class="product-card" onclick="window.location='product.html?product=pampas-arch&from=numbers'" style="cursor:pointer;">
-    <div class="product-svg-wrap">
-      <svg viewBox="0 0 400 530" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="bg3" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#f8f0e8"/>
-            <stop offset="100%" stop-color="#ece0d4"/>
-          </linearGradient>
-        </defs>
-        <rect width="400" height="530" fill="url(#bg3)"/>
-        <!-- large arch -->
-        <path d="M60 530 L60 200 Q60 30 200 30 Q340 30 340 200 L340 530" stroke="rgba(188,162,138,0.4)" stroke-width="2" fill="rgba(255,255,255,0.18)"/>
-        <!-- pampas grasses — left side -->
-        <g opacity="0.7">
-          <path d="M60 200 Q55 140 48 100" stroke="#c4a882" stroke-width="1.2" fill="none"/>
-          <ellipse cx="46" cy="90" rx="6" ry="22" fill="rgba(210,190,165,0.55)" transform="rotate(-8 46 90)"/>
-          <path d="M60 180 Q50 120 38 78" stroke="#c4a882" stroke-width="1" fill="none"/>
-          <ellipse cx="36" cy="68" rx="5" ry="18" fill="rgba(218,198,174,0.5)" transform="rotate(-15 36 68)"/>
-          <path d="M60 220 Q45 165 30 120" stroke="#bfa070" stroke-width="1" fill="none"/>
-          <ellipse cx="27" cy="108" rx="5" ry="20" fill="rgba(205,184,160,0.52)" transform="rotate(-22 27 108)"/>
-          <path d="M60 160 Q65 100 68 58" stroke="#c4a882" stroke-width="1" fill="none"/>
-          <ellipse cx="70" cy="48" rx="5" ry="17" fill="rgba(212,192,168,0.48)" transform="rotate(5 70 48)"/>
-        </g>
-        <!-- pampas grasses — right side -->
-        <g opacity="0.65">
-          <path d="M340 200 Q345 140 352 100" stroke="#c4a882" stroke-width="1.2" fill="none"/>
-          <ellipse cx="354" cy="90" rx="6" ry="22" fill="rgba(210,190,165,0.55)" transform="rotate(8 354 90)"/>
-          <path d="M340 180 Q350 120 362 78" stroke="#c4a882" stroke-width="1" fill="none"/>
-          <ellipse cx="364" cy="68" rx="5" ry="18" fill="rgba(218,198,174,0.5)" transform="rotate(15 364 68)"/>
-          <path d="M340 220 Q355 165 370 120" stroke="#bfa070" stroke-width="1" fill="none"/>
-          <ellipse cx="373" cy="108" rx="5" ry="20" fill="rgba(205,184,160,0.52)" transform="rotate(22 373 108)"/>
-          <path d="M340 160 Q335 100 332 58" stroke="#c4a882" stroke-width="1" fill="none"/>
-          <ellipse cx="330" cy="48" rx="5" ry="17" fill="rgba(212,192,168,0.48)" transform="rotate(-5 330 48)"/>
-        </g>
-        <!-- top arch florals -->
-        <circle cx="200" cy="42" r="26" fill="rgba(228,202,186,0.55)"/>
-        <ellipse cx="200" cy="16" rx="6" ry="12" fill="rgba(242,220,208,0.68)" transform="rotate(0 200 42)"/>
-        <ellipse cx="200" cy="16" rx="6" ry="12" fill="rgba(242,220,208,0.68)" transform="rotate(51 200 42)"/>
-        <ellipse cx="200" cy="16" rx="6" ry="12" fill="rgba(242,220,208,0.68)" transform="rotate(102 200 42)"/>
-        <ellipse cx="200" cy="16" rx="6" ry="12" fill="rgba(242,220,208,0.68)" transform="rotate(153 200 42)"/>
-        <ellipse cx="200" cy="16" rx="6" ry="12" fill="rgba(242,220,208,0.68)" transform="rotate(204 200 42)"/>
-        <ellipse cx="200" cy="16" rx="6" ry="12" fill="rgba(242,220,208,0.68)" transform="rotate(255 200 42)"/>
-        <ellipse cx="200" cy="16" rx="6" ry="12" fill="rgba(242,220,208,0.68)" transform="rotate(306 200 42)"/>
-        <circle cx="200" cy="42" r="10" fill="rgba(204,168,150,0.75)"/>
-        <!-- inner soft panel -->
-        <rect x="60" y="200" width="280" height="330" fill="rgba(255,255,255,0.1)" rx="2"/>
-      </svg>
-    </div>
-    <div class="rent-overlay"><a href="product.html?product=pampas-arch&from=numbers" class="rent-btn">Click to Order</a></div>
-    <div class="product-info">
-      <div class="product-name">Pampas Grass Arch</div>
-      <div class="product-price">From $95 / day</div>
-    </div>
-  </div>
-
-  <!-- Card 4 — Ivory Silk Drape -->
-  <div class="product-card" onclick="window.location='product.html?product=ivory-silk-drape&from=numbers'" style="cursor:pointer;">
-    <div class="product-svg-wrap">
-      <svg viewBox="0 0 400 530" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="bg4" x1="0.2" y1="0" x2="0.8" y2="1">
-            <stop offset="0%" stop-color="#faf5ee"/>
-            <stop offset="40%" stop-color="#f0e8de"/>
-            <stop offset="100%" stop-color="#e4d8cc"/>
-          </linearGradient>
-          <linearGradient id="drape1" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stop-color="rgba(245,238,228,0.9)"/>
-            <stop offset="35%" stop-color="rgba(255,252,248,0.95)"/>
-            <stop offset="65%" stop-color="rgba(245,238,228,0.85)"/>
-            <stop offset="100%" stop-color="rgba(230,220,208,0.8)"/>
-          </linearGradient>
-        </defs>
-        <rect width="400" height="530" fill="url(#bg4)"/>
-        <!-- silk drape folds -->
-        <path d="M50 0 Q80 80 60 200 Q40 340 55 530" fill="rgba(255,252,248,0.4)" stroke="none"/>
-        <path d="M80 0 Q110 90 95 210 Q80 355 90 530" fill="rgba(245,240,232,0.3)" stroke="none"/>
-        <path d="M130 0 Q155 75 145 200 Q135 340 140 530" fill="rgba(250,246,240,0.25)" stroke="none"/>
-        <path d="M200 0 Q215 70 210 195 Q205 338 208 530" fill="rgba(255,252,248,0.28)" stroke="none"/>
-        <path d="M265 0 Q248 78 255 202 Q260 344 258 530" fill="rgba(248,243,236,0.22)" stroke="none"/>
-        <path d="M310 0 Q298 85 305 208 Q310 348 308 530" fill="rgba(243,237,229,0.2)" stroke="none"/>
-        <path d="M350 0 Q340 88 345 210 Q348 352 346 530" fill="rgba(238,232,224,0.18)" stroke="none"/>
-        <!-- soft highlights -->
-        <path d="M160 0 Q168 60 165 180 Q162 310 163 530" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" fill="none"/>
-        <path d="M240 0 Q235 65 237 185 Q238 315 237 530" stroke="rgba(255,255,255,0.28)" stroke-width="1"   fill="none"/>
-        <!-- elegant oval motif -->
-        <ellipse cx="200" cy="265" rx="80" ry="110" stroke="rgba(180,155,130,0.22)" stroke-width="1.2" fill="none"/>
-        <ellipse cx="200" cy="265" rx="60" ry="85"  stroke="rgba(180,155,130,0.14)" stroke-width="0.8" fill="none"/>
-        <!-- top tie detail -->
-        <path d="M160 0 Q200 28 240 0" stroke="rgba(180,155,130,0.4)" stroke-width="2" fill="none"/>
-        <circle cx="200" cy="22" r="6" fill="rgba(196,168,148,0.55)"/>
-      </svg>
-    </div>
-    <div class="rent-overlay"><a href="product.html?product=ivory-silk-drape&from=numbers" class="rent-btn">Click to Order</a></div>
-    <div class="product-info">
-      <div class="product-name">Ivory Silk Drape Panel</div>
-      <div class="product-price">From $75 / day</div>
-    </div>
+  <div style="padding:40px 20px;text-align:center;color:var(--text-soft);font-family:'Jost',sans-serif;font-size:0.75rem;letter-spacing:0.1em;grid-column:1/-1;">
+    Coming soon — check back when we update our inventory.
   </div>
 
   <div class="back-to-top">
@@ -734,41 +591,31 @@
 
   <div class="category-label" id="section-neon">Neon Signs <span>Collection</span></div>
 
-  <!-- Card 5 — Rose Garden Backdrop -->
-  <div class="product-card" onclick="window.location='product.html?product=terracotta-plaster&from=neon'" style="cursor:pointer;">
-    <div class="product-svg-wrap">
-      <svg viewBox="0 0 400 530" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <radialGradient id="bg6" cx="40%" cy="35%" r="75%">
-            <stop offset="0%" stop-color="#e8cdb8"/>
-            <stop offset="50%" stop-color="#d8b89a"/>
-            <stop offset="100%" stop-color="#c8a282"/>
-          </radialGradient>
-        </defs>
-        <rect width="400" height="530" fill="url(#bg6)"/>
-        <!-- plaster texture strokes -->
-        <g stroke="rgba(255,240,220,0.18)" stroke-width="60" fill="none" stroke-linecap="round">
-          <path d="M-20 80 Q100 50 220 90 Q340 130 420 100"/>
-          <path d="M-20 200 Q80 170 200 205 Q320 240 420 210"/>
-          <path d="M-20 340 Q120 310 230 345 Q340 380 420 350"/>
-          <path d="M-20 470 Q100 445 220 475 Q340 505 420 478"/>
-        </g>
-        <!-- highlight washes -->
-        <ellipse cx="140" cy="160" rx="110" ry="130" fill="rgba(255,245,235,0.16)"/>
-        <ellipse cx="290" cy="380" rx="90"  ry="100" fill="rgba(255,242,228,0.12)"/>
-        <!-- delicate arch motif -->
-        <path d="M130 530 L130 310 Q130 210 200 210 Q270 210 270 310 L270 530" stroke="rgba(255,255,255,0.22)" stroke-width="1.5" fill="none"/>
-        <!-- scattered botanicals -->
-        <ellipse cx="200" cy="115" rx="22" ry="40" fill="rgba(255,248,238,0.2)" transform="rotate(-5 200 115)"/>
-        <ellipse cx="200" cy="415" rx="20" ry="36" fill="rgba(255,245,232,0.18)" transform="rotate(5 200 415)"/>
-        <ellipse cx="80"  cy="265" rx="16" ry="30" fill="rgba(255,245,235,0.15)" transform="rotate(-20 80 265)"/>
-        <ellipse cx="320" cy="275" rx="15" ry="28" fill="rgba(255,244,232,0.14)" transform="rotate(18 320 275)"/>
-      </svg>
+  <!-- Neon: Oh Baby! -->
+  <div class="product-card" onclick="window.location='product.html?product=oh-baby-neon&from=neon'" style="cursor:pointer;">
+    <div class="product-card-img">
+      <div style="width:100%;height:100%;background:#1a1a2e;display:flex;align-items:center;justify-content:center;">
+        <span style="font-family:'Great Vibes',cursive;font-size:1.4rem;color:rgba(255,255,255,0.9);text-shadow:0 0 12px rgba(255,255,255,0.6);">Oh Baby!</span>
+      </div>
     </div>
-    <div class="rent-overlay"><a href="product.html?product=terracotta-plaster&from=neon" class="rent-btn">Click to Order</a></div>
+    <div class="rent-overlay"><a href="product.html?product=oh-baby-neon&from=neon" class="rent-btn">Click to Order</a></div>
     <div class="product-info">
-      <div class="product-name">Terracotta Plaster Wash</div>
-      <div class="product-price">From $70 / day</div>
+      <div class="product-name">"Oh Baby!" Neon Sign</div>
+      <div class="product-price">$100 / day</div>
+    </div>
+  </div>
+
+  <!-- Neon: Will You Marry Me? -->
+  <div class="product-card" onclick="window.location='product.html?product=will-you-marry-me-neon&from=neon'" style="cursor:pointer;">
+    <div class="product-card-img">
+      <div style="width:100%;height:100%;background:#1a1a2e;display:flex;align-items:center;justify-content:center;padding:10px;text-align:center;">
+        <span style="font-family:'Great Vibes',cursive;font-size:1.1rem;color:rgba(255,255,255,0.9);text-shadow:0 0 12px rgba(255,255,255,0.6);line-height:1.5;">Will You<br>Marry Me?</span>
+      </div>
+    </div>
+    <div class="rent-overlay"><a href="product.html?product=will-you-marry-me-neon&from=neon" class="rent-btn">Click to Order</a></div>
+    <div class="product-info">
+      <div class="product-name">"Will You Marry Me?" Neon Sign</div>
+      <div class="product-price">$100 / day</div>
     </div>
   </div>
 
@@ -827,14 +674,12 @@
   <!-- What's Included -->
   <div style="max-width:720px;margin:56px auto 0;text-align:center;">
     <p style="font-size:0.6rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--text-soft);margin-bottom:20px;">What's Included With Every Rental</p>
-    <div style="display:grid;grid-template-columns:repeat(3,auto);justify-content:center;gap:12px;">
+    <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px;max-width:680px;margin:0 auto;">
       <div style="padding:10px 20px;background:white;border:1px solid rgba(201,180,154,0.35);border-radius:50px;font-size:0.72rem;color:var(--text-mid);font-family:'Jost',sans-serif;font-weight:300;letter-spacing:0.04em;white-space:nowrap;">Delivery to your venue</div>
       <div style="padding:10px 20px;background:white;border:1px solid rgba(201,180,154,0.35);border-radius:50px;font-size:0.72rem;color:var(--text-mid);font-family:'Jost',sans-serif;font-weight:300;letter-spacing:0.04em;white-space:nowrap;">Full setup on arrival</div>
       <div style="padding:10px 20px;background:white;border:1px solid rgba(201,180,154,0.35);border-radius:50px;font-size:0.72rem;color:var(--text-mid);font-family:'Jost',sans-serif;font-weight:300;letter-spacing:0.04em;white-space:nowrap;">Pickup after your event</div>
-      <div style="grid-column:1/-1;display:flex;justify-content:center;gap:12px;">
-        <div style="padding:10px 20px;background:white;border:1px solid rgba(201,180,154,0.35);border-radius:50px;font-size:0.72rem;color:var(--text-mid);font-family:'Jost',sans-serif;font-weight:300;letter-spacing:0.04em;white-space:nowrap;">Booking confirmation email</div>
-        <div style="padding:10px 20px;background:white;border:1px solid rgba(201,180,154,0.35);border-radius:50px;font-size:0.72rem;color:var(--text-mid);font-family:'Jost',sans-serif;font-weight:300;letter-spacing:0.04em;white-space:nowrap;">$175 refundable damage hold</div>
-      </div>
+      <div style="padding:10px 20px;background:white;border:1px solid rgba(201,180,154,0.35);border-radius:50px;font-size:0.72rem;color:var(--text-mid);font-family:'Jost',sans-serif;font-weight:300;letter-spacing:0.04em;white-space:nowrap;">Booking confirmation email</div>
+      <div style="padding:10px 20px;background:white;border:1px solid rgba(201,180,154,0.35);border-radius:50px;font-size:0.72rem;color:var(--text-mid);font-family:'Jost',sans-serif;font-weight:300;letter-spacing:0.04em;white-space:nowrap;">$175 refundable damage hold</div>
     </div>
   </div>
 
@@ -890,21 +735,14 @@
 <!-- ═══════════════════════  FOOTER  ════════════════════ -->
 <footer>
   <div class="footer-logo">the backdrop bar</div>
-  <ul class="footer-links">
-    <li><a href="#">Shop</a></li>
-    <li><a href="#">Gallery</a></li>
-    <li><a href="#">FAQ</a></li>
-    <li><a href="#">Delivery Info</a></li>
-    <li><a href="#">Instagram</a></li>
-    <li><a href="#">Contact</a></li>
-  </ul>
+
   <p class="footer-copy">© 2025 The Backdrop Bar · Bay Area, California · All rights reserved</p>
 </footer>
 
 <script>
   // ── FAQ
   const FAQS = [
-    { q: 'How far in advance should I book?', a: 'We recommend booking at least 1 week before your event to guarantee availability. For weddings and larger events, 2 to 4 weeks ahead is ideal. That said, we do accept last-minute orders subject to availability.' },
+    { q: 'How far in advance should I book?', a: 'We recommend booking as early as possible to guarantee your preferred dates. For weddings and larger events, a few weeks ahead is ideal. That said, we do accept last-minute orders subject to availability.' },
     { q: 'Is delivery and setup included?', a: 'Yes, every rental includes delivery, full setup at your venue, and pickup after your event.' },
     { q: 'What is the damage hold?', a: 'A $175 pre-authorization is placed on your card at booking. This is not a charge, it will be released in full within 5 to 7 business days after your items are returned in good condition.' },
     { q: 'What happens if something gets damaged?', a: 'Minor damage is assessed on a case by case basis. If damage occurs, we will capture part or all of the $175 hold to cover repair or cleaning costs. Significant damage beyond the hold amount will be invoiced separately. Full details are in the rental agreement.' },

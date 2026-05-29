@@ -676,14 +676,19 @@
     return h;
   }
 
-  function rebuildHours(isToday) {
+  function rebuildHours(isToday, isSameDayAsPickup, pickupHour24) {
     const el = document.getElementById('picker-hour');
     if (!el) return;
     const cur = new Date();
     const curH = cur.getHours(), curM = cur.getMinutes();
-    const CUTOFF_H = 20, CUTOFF_M = 15;
-    const pastCutoff = isToday && (curH > CUTOFF_H || (curH === CUTOFF_H && curM > CUTOFF_M));
-    const minHour = isToday ? curH + 1 : 0;
+    const CUTOFF_H = 20, CUTOFF_M = 15; // after 8:15 PM no same-day slots
+    // Fix: >= not > so 8:15 PM is blocked
+    const pastCutoff = isToday && (curH > CUTOFF_H || (curH === CUTOFF_H && curM >= CUTOFF_M));
+    let minHour = 0;
+    if (isToday) minHour = curH + 1;                          // 1hr buffer from now
+    if (isSameDayAsPickup && pickupHour24 !== undefined) {
+      minHour = Math.max(minHour, pickupHour24 + 1);          // return must be after pickup
+    }
     el.innerHTML = '';
     if (!pastCutoff) {
       TIME_SLOTS.forEach(function(s) {
@@ -697,9 +702,12 @@
     if (el.options.length === 0) {
       const o = document.createElement('option');
       o.value = '';
-      o.textContent = 'No times available today';
+      o.textContent = activePicker === 'return'
+        ? 'No available times — try a different date'
+        : 'No available times today — select a future date';
       el.appendChild(o);
     }
+    // Disable until a day is selected
     const minEl = document.getElementById('picker-min');
     if (!selectedDay) {
       el.disabled = true; el.style.opacity = '0.4';
@@ -712,7 +720,7 @@
 
   document.addEventListener('DOMContentLoaded', function() {
     loadAvailability();
-    rebuildHours(false);
+    rebuildHours(false, false, undefined);
     const el = document.getElementById('picker-hour');
     const minEl = document.getElementById('picker-min');
     if (el) { el.disabled = true; el.style.opacity = '0.4'; }
@@ -733,7 +741,7 @@
     document.getElementById('picker-title').textContent = type === 'pickup' ? 'Needed By' : 'Return By';
     document.getElementById('picker-overlay').style.display = 'block';
     document.getElementById('picker-popup').style.display  = 'block';
-    rebuildHours(true);
+    rebuildHours(true, false, undefined);
     renderCalendar();
   }
 
@@ -749,7 +757,7 @@
     if (calMonth < 0)  { calMonth = 11; calYear--; }
     selectedDay = null;
     const isCurrentMonth = (calYear === now.getFullYear() && calMonth === now.getMonth());
-    rebuildHours(isCurrentMonth);
+    rebuildHours(isCurrentMonth, false, undefined);
     renderCalendar();
   }
 
@@ -805,7 +813,19 @@
   function selectDay(d) {
     selectedDay = { d, m: calMonth, y: calYear };
     const isToday = (calYear === now.getFullYear() && calMonth === now.getMonth() && d === now.getDate());
-    rebuildHours(isToday);
+    // For return picker: check if selected day is same as pickup day
+    let isSameDayAsPickup = false;
+    let pickupHour24 = undefined;
+    if (activePicker === 'return' && pickupDate) {
+      isSameDayAsPickup = (calYear === pickupDate.y && calMonth === pickupDate.m && d === pickupDate.d);
+      if (isSameDayAsPickup) {
+        pickupHour24 = pickupDate.h;
+        // Convert to 24hr
+        if (pickupDate.ampm === 'PM' && pickupHour24 !== 12) pickupHour24 += 12;
+        if (pickupDate.ampm === 'AM' && pickupHour24 === 12) pickupHour24 = 0;
+      }
+    }
+    rebuildHours(isToday, isSameDayAsPickup, pickupHour24);
     renderCalendar();
   }
 

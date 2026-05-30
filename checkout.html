@@ -475,6 +475,9 @@
   // ── Tax rate for Bay Area CA (~9.875% average)
   const TAX_RATE = 0.09875;
 
+  // ── Load cart first — must be before calcDamageHold
+  const cart = JSON.parse(localStorage.getItem('tbb_cart') || '[]');
+
   // Dynamic damage hold: $100 per backdrop, $50 per neon sign
   function calcDamageHold(cartItems) {
     let hold = 0;
@@ -486,9 +489,6 @@
   }
   const DAMAGE_HOLD = calcDamageHold(cart);
   let orderTotalCached = 0;
-
-  // ── Load cart and render summary
-  const cart = JSON.parse(localStorage.getItem('tbb_cart') || '[]');
 
   function renderSummary() {
     const itemsEl   = document.getElementById('summaryItems');

@@ -262,7 +262,7 @@
     </div>
 
     <!-- Delivery address -->
-    <div class="form-block">
+    <div class="form-block" id="rentalAddressBlock" style="display:none;">
       <div class="form-block-title">Venue / Rental Address</div>
       <div style="font-size:0.65rem;color:var(--text-soft);margin-bottom:14px;line-height:1.7;">
         Where should we deliver and set up your rental? Must be within the Bay Area.
@@ -646,12 +646,14 @@
     return false;
   }
 
-  // ── Show purchase address block if cart has any purchased items
+  // ── Show address blocks based on what's in the cart
   const hasPurchases = cart.some(i => i.purchaseType === 'buy');
-  if (hasPurchases) {
-    const block = document.getElementById('purchaseAddressBlock');
-    if (block) block.style.display = 'block';
-  }
+  const hasRentals   = cart.some(i => i.purchaseType !== 'buy');
+
+  const rentalBlock   = document.getElementById('rentalAddressBlock');
+  const purchaseBlock = document.getElementById('purchaseAddressBlock');
+  if (rentalBlock)   rentalBlock.style.display   = hasRentals   ? 'block' : 'none';
+  if (purchaseBlock) purchaseBlock.style.display = hasPurchases ? 'block' : 'none';
 
   // ── Shipping fee logic
   let shippingFee = 0;
@@ -871,14 +873,16 @@
       showSectionError(contactBlock, 'Please fill in all fields in this section before proceeding.');
     }
 
-    // ── Address section validation
-    const addressBlock = document.querySelectorAll('.form-block')[1];
-    const addressErrors = [];
-    if (!address) { showFieldError('address', 'Required'); hasError = true; addressErrors.push(true); }
-    if (!city)    { showFieldError('city',    'Required'); hasError = true; addressErrors.push(true); }
-    if (!zip)     { showFieldError('zip',     'Required'); hasError = true; addressErrors.push(true); }
-    if (addressErrors.length) {
-      showSectionError(addressBlock, 'Please fill in all fields in this section before proceeding.');
+    // ── Address section validation — only if cart has rental items
+    if (hasRentals) {
+      const addressBlock = document.querySelectorAll('.form-block')[1];
+      const addressErrors = [];
+      if (!address) { showFieldError('address', 'Required'); hasError = true; addressErrors.push(true); }
+      if (!city)    { showFieldError('city',    'Required'); hasError = true; addressErrors.push(true); }
+      if (!zip)     { showFieldError('zip',     'Required'); hasError = true; addressErrors.push(true); }
+      if (addressErrors.length) {
+        showSectionError(addressBlock, 'Please fill in all fields in this section before proceeding.');
+      }
     }
 
     // ── Card section validation
@@ -904,8 +908,8 @@
       return;
     }
 
-    // ── Delivery area check
-    if (!isZipInRange(zip)) {
+    // ── Delivery area check — only for rental items
+    if (hasRentals && !isZipInRange(zip)) {
       document.getElementById('contactModal').style.display = 'flex';
       return;
     }

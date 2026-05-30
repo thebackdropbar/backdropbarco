@@ -30,13 +30,13 @@ const PRODUCTS = {
 
   // ── NEON SIGNS ────────────────────────────────────────────
   'oh-baby-neon': {
-    id: 'oh-baby-neon', title: '"Oh Baby!" Neon Sign', price: 100,
+    id: 'oh-baby-neon', title: '"Oh Baby!" Neon Sign', price: 50,
     category: 'Neon Signs', size: 'TBD', damageHold: 50,
     type: 'neon', images: ['photos/oh-baby-neon.jpg'], section: 'neon',
     addonOnly: true // can only be added with a backdrop
   },
   'will-you-marry-me-neon': {
-    id: 'will-you-marry-me-neon', title: '"Will You Marry Me?" Neon Sign', price: 100,
+    id: 'will-you-marry-me-neon', title: '"Will You Marry Me?" Neon Sign', price: 50,
     category: 'Neon Signs', size: 'TBD', damageHold: 50,
     type: 'neon', images: ['photos/will-you-marry-me-neon.jpg'], section: 'neon',
     addonOnly: true

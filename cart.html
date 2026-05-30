@@ -449,7 +449,7 @@
     <div class="summary-title">Order Summary</div>
     <div id="summaryRows"></div>
     <div class="summary-row total">
-      <strong>Subtotal</strong>
+      <strong>Total</strong>
       <strong id="summaryTotal">$0.00</strong>
     </div>
     <a href="checkout.html" class="checkout-btn" id="checkoutBtn" onclick="return validateCartDates()">Proceed to Checkout</a>
@@ -542,7 +542,6 @@
             <button class="cart-qty-btn" onclick="changeQty(${idx}, 1)">+</button>
           </div>
           <div class="cart-item-subtotal">
-            <span>Subtotal</span>
             $${(item.price * item.qty * days).toFixed(2)}
           </div>
         </div>
@@ -558,19 +557,13 @@
       rowsEl.appendChild(row);
     });
 
-    // Simple cart summary — just subtotal, no delivery/tax yet
     const divider = document.createElement('div');
     divider.style = 'height:1px;background:rgba(201,180,154,0.2);margin:8px 0;';
     rowsEl.appendChild(divider);
 
-    const subtotalRow = document.createElement('div');
-    subtotalRow.className = 'summary-row total';
-    subtotalRow.innerHTML = `<strong>Subtotal</strong><strong>$${subtotal.toFixed(2)}</strong>`;
-    rowsEl.appendChild(subtotalRow);
-
     const note = document.createElement('div');
     note.style = 'font-size:0.6rem;color:#a99589;margin-top:8px;line-height:1.6;';
-    note.textContent = 'Delivery fee and CA sales tax will be calculated at checkout.';
+    note.textContent = 'Tax will be calculated at checkout.';
     rowsEl.appendChild(note);
 
     totalEl.textContent = '$' + subtotal.toFixed(2);

@@ -596,14 +596,30 @@
     if (s.a === 'AM' && h === 12) h = 0;
     return h;
   }
-  function rebuildCartHours(isToday) {
-    var el = document.getElementById('cartPickerHour');
-    if (!el) return;
+  function cartHasSlotsForDay(isToday, isSameDayAsPickup, pickupHour24) {
     var n = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
     var curH = n.getHours(), curM = n.getMinutes();
-    var LAST_BOOKING_HOUR = 20;
-    var pastCutoff = isToday && (curH > LAST_BOOKING_HOUR || (curH === LAST_BOOKING_HOUR && curM >= 15));
+    var pastCutoff = isToday && (curH > 20 || (curH === 20 && curM >= 15));
+    if (pastCutoff) return false;
     var minHour = isToday ? curH + 1 : 0;
+    if (isSameDayAsPickup && pickupHour24 !== undefined) minHour = Math.max(minHour, pickupHour24 + 1);
+    return CART_TIME_SLOTS.some(function(s) { return cartSlotTo24(s) >= minHour; });
+  }
+
+  function rebuildCartHours(isToday, isSameDayAsPickup, pickupHour24) {
+    var el = document.getElementById('cartPickerHour');
+    if (!el) return;
+    // Show placeholder if no day selected
+    if (!selectedDay) {
+      el.innerHTML = '<option value="">Select a date first</option>';
+      el.disabled = true; el.style.opacity = '0.4';
+      return;
+    }
+    var n = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+    var curH = n.getHours(), curM = n.getMinutes();
+    var pastCutoff = isToday && (curH > 20 || (curH === 20 && curM >= 15));
+    var minHour = isToday ? curH + 1 : 0;
+    if (isSameDayAsPickup && pickupHour24 !== undefined) minHour = Math.max(minHour, pickupHour24 + 1);
     el.innerHTML = '';
     if (!pastCutoff) {
       CART_TIME_SLOTS.forEach(function(s) {
@@ -617,9 +633,10 @@
     if (el.options.length === 0) {
       var o = document.createElement('option');
       o.value = '';
-      o.textContent = 'No available times today — please select a future date';
+      o.textContent = 'No times today';
       el.appendChild(o);
     }
+    el.disabled = false; el.style.opacity = '1';
   }
   document.addEventListener('DOMContentLoaded', function() {
     rebuildCartHours(false);
@@ -652,12 +669,13 @@
 
   function openEditPicker(type) {
     activePicker = type;
-    calYear = now.getFullYear();
-    calMonth = now.getMonth();
+    const pst = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+    calYear = pst.getFullYear();
+    calMonth = pst.getMonth();
     selectedDay = null;
     document.getElementById('cartPickerTitle').textContent = type === 'pickup' ? 'Needed By' : 'Return By';
     document.getElementById('cartPickerOverlay').classList.add('open');
-    rebuildCartHours(true); // opens on current month — filter past times by default
+    rebuildCartHours(true, false, undefined);
     renderCartCalendar();
   }
 
@@ -670,8 +688,9 @@
     calMonth += delta;
     if (calMonth > 11) { calMonth = 0; calYear++; }
     if (calMonth < 0)  { calMonth = 11; calYear--; }
-    const isCurrentMonth = calYear === now.getFullYear() && calMonth === now.getMonth();
-    rebuildCartHours(isCurrentMonth);
+    const pst = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+    const isCurrentMonth = calYear === pst.getFullYear() && calMonth === pst.getMonth();
+    rebuildCartHours(isCurrentMonth, false, undefined);
     selectedDay = null;
     renderCartCalendar();
   }
@@ -682,7 +701,8 @@
     grid.innerHTML = '';
     const firstDay = new Date(calYear, calMonth, 1).getDay();
     const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
-    const td = now.getDate(), tm = now.getMonth(), ty = now.getFullYear();
+    const pst = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+    const td = pst.getDate(), tm = pst.getMonth(), ty = pst.getFullYear();
 
     for (let i = 0; i < firstDay; i++) {
       const e = document.createElement('div'); e.className = 'cal-day empty'; grid.appendChild(e);
@@ -692,21 +712,44 @@
       cell.className = 'cal-day';
       cell.textContent = d;
       const isPast = (calYear < ty) || (calYear === ty && calMonth < tm) || (calYear === ty && calMonth === tm && d < td);
+
+      // For return picker: block days before pickup date
       if (activePicker === 'return' && editPickupDate) {
         const pd = new Date(editPickupDate.y, editPickupDate.m, editPickupDate.d);
         if (new Date(calYear, calMonth, d) < pd) { cell.classList.add('disabled'); grid.appendChild(cell); continue; }
       }
+
       if (isPast) {
         cell.classList.add('disabled');
       } else {
-        if (calYear === ty && calMonth === tm && d === td) cell.classList.add('today');
-        if (selectedDay && selectedDay.d === d && selectedDay.m === calMonth && selectedDay.y === calYear) cell.classList.add('selected');
-        cell.onclick = () => {
-          selectedDay = { d, m: calMonth, y: calYear };
-          const isToday = calYear === now.getFullYear() && calMonth === now.getMonth() && d === now.getDate();
-          rebuildCartHours(isToday);
-          renderCartCalendar();
-        };
+        const isTodayCell = (calYear === ty && calMonth === tm && d === td);
+
+        // Check same-day-as-pickup for return picker
+        let isSameDayAsPickup = false;
+        let pickupHour24 = undefined;
+        if (activePicker === 'return' && editPickupDate) {
+          isSameDayAsPickup = (calYear === editPickupDate.y && calMonth === editPickupDate.m && d === editPickupDate.d);
+          if (isSameDayAsPickup) {
+            pickupHour24 = editPickupDate.h;
+            if (editPickupDate.ampm === 'PM' && pickupHour24 !== 12) pickupHour24 += 12;
+            if (editPickupDate.ampm === 'AM' && pickupHour24 === 12) pickupHour24 = 0;
+          }
+        }
+
+        // Grey out days with no available time slots
+        if (!cartHasSlotsForDay(isTodayCell, isSameDayAsPickup, pickupHour24)) {
+          cell.classList.add('disabled');
+          cell.style.opacity = '0.3';
+        } else {
+          if (isTodayCell) cell.classList.add('today');
+          if (selectedDay && selectedDay.d === d && selectedDay.m === calMonth && selectedDay.y === calYear) cell.classList.add('selected');
+          cell.onclick = () => {
+            selectedDay = { d, m: calMonth, y: calYear };
+            const isToday2 = (calYear === ty && calMonth === tm && d === td);
+            rebuildCartHours(isToday2, isSameDayAsPickup, pickupHour24);
+            renderCartCalendar();
+          };
+        }
       }
       grid.appendChild(cell);
     }
@@ -715,7 +758,9 @@
   function confirmCartPicker() {
     if (!selectedDay) { alert('Please select a date.'); return; }
     const hourVal = document.getElementById('cartPickerHour').value;
-    const [h, ampm] = hourVal.split('|');
+    if (!hourVal) { alert('No times available for this date. Please select a different date.'); return; }
+    const parts = hourVal.split('|');
+    const h = parts[0], ampm = parts[1];
     const min = document.getElementById('cartPickerMin').value;
     const dateStr = `${MONTHS[selectedDay.m]} ${selectedDay.d}, ${selectedDay.y}`;
     const timeStr = `${parseInt(h)}:${min} ${ampm}`;

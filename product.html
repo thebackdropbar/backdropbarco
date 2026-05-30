@@ -771,9 +771,7 @@
     if (el.options.length === 0) {
       const o = document.createElement('option');
       o.value = '';
-      o.textContent = activePicker === 'return'
-        ? 'No available times — try a different date'
-        : 'No available times today — select a future date';
+      o.textContent = activePicker === 'return' ? 'No times — try another date' : 'No times today';
       el.appendChild(o);
     }
     // Enable since a day is selected
@@ -825,6 +823,17 @@
     renderCalendar();
   }
 
+  // Returns true if there are bookable time slots for a given day
+  function hasSlotsForDay(isToday, isSameDayAsPickup, pickupHour24) {
+    const cur = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+    const curH = cur.getHours(), curM = cur.getMinutes();
+    const pastCutoff = isToday && (curH > 20 || (curH === 20 && curM >= 15));
+    if (pastCutoff) return false;
+    let minHour = isToday ? curH + 1 : 0;
+    if (isSameDayAsPickup && pickupHour24 !== undefined) minHour = Math.max(minHour, pickupHour24 + 1);
+    return TIME_SLOTS.some(function(s) { return slotTo24(s) >= minHour; });
+  }
+
   function renderCalendar() {
     document.getElementById('cal-month-label').textContent = `${MONTHS[calMonth]} ${calYear}`;
     const grid = document.getElementById('cal-grid');
@@ -867,9 +876,27 @@
         cell.style.cssText += 'text-decoration:line-through;color:rgba(201,180,154,0.5);cursor:not-allowed;';
         cell.title = 'Already booked';
       } else {
-        if (calYear === todayYear && calMonth === todayMonth && d === todayDate) cell.classList.add('today');
-        if (selectedDay && selectedDay.d === d && selectedDay.m === calMonth && selectedDay.y === calYear) cell.classList.add('selected');
-        cell.onclick = () => selectDay(d);
+        // Check if this day has any available time slots
+        const isTodayCell = (calYear === todayYear && calMonth === todayMonth && d === todayDate);
+        let isSameDayAsPickup = false;
+        let pickupHour24 = undefined;
+        if (activePicker === 'return' && pickupDate) {
+          isSameDayAsPickup = (calYear === pickupDate.y && calMonth === pickupDate.m && d === pickupDate.d);
+          if (isSameDayAsPickup) {
+            pickupHour24 = pickupDate.h;
+            if (pickupDate.ampm === 'PM' && pickupHour24 !== 12) pickupHour24 += 12;
+            if (pickupDate.ampm === 'AM' && pickupHour24 === 12) pickupHour24 = 0;
+          }
+        }
+        if (!hasSlotsForDay(isTodayCell, isSameDayAsPickup, pickupHour24)) {
+          cell.classList.add('disabled');
+          cell.style.opacity = '0.3';
+          cell.title = activePicker === 'return' ? 'No available return times' : 'No available times';
+        } else {
+          if (isTodayCell) cell.classList.add('today');
+          if (selectedDay && selectedDay.d === d && selectedDay.m === calMonth && selectedDay.y === calYear) cell.classList.add('selected');
+          cell.onclick = () => selectDay(d);
+        }
       }
       grid.appendChild(cell);
     }

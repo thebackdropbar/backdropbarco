@@ -755,7 +755,7 @@
     const CUTOFF_H = 20, CUTOFF_M = 15;
     const pastCutoff = isToday && (curH > CUTOFF_H || (curH === CUTOFF_H && curM >= CUTOFF_M));
     let minHour = 0;
-    if (isToday) minHour = curH + 1;
+    if (isToday) minHour = curM > 0 ? curH + 2 : curH + 1; // ensure full 1hr gap
     if (isSameDayAsPickup && pickupHour24 !== undefined) {
       minHour = Math.max(minHour, pickupHour24 + 1);
     }
@@ -829,7 +829,7 @@
     const curH = cur.getHours(), curM = cur.getMinutes();
     const pastCutoff = isToday && (curH > 20 || (curH === 20 && curM >= 15));
     if (pastCutoff) return false;
-    let minHour = isToday ? curH + 1 : 0;
+    let minHour = isToday ? (curM > 0 ? curH + 2 : curH + 1) : 0;
     if (isSameDayAsPickup && pickupHour24 !== undefined) minHour = Math.max(minHour, pickupHour24 + 1);
     return TIME_SLOTS.some(function(s) { return slotTo24(s) >= minHour; });
   }
@@ -1068,19 +1068,18 @@
       return;
     }
 
-    // Check pickup time hasn't passed since selection
+    // If pickup time has somehow become stale, silently reset and ask to reselect
     const pickupDt = parseDisplayTime(pickup);
-    if (pickupDt && pickupDt <= new Date()) {
-      document.getElementById('pickup-field').style.borderColor = '#c9705a';
-      document.getElementById('rental-duration').textContent = 'Your pickup time has passed — please select a new date and time.';
-      document.getElementById('rental-duration').style.color = '#c9705a';
-      document.getElementById('pickup-field').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (pickupDt && pickupDt <= new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }))) {
       pickupDate = null;
       returnDate = null;
       document.getElementById('pickup-display').textContent = 'Select date & time';
       document.getElementById('return-display').textContent = 'Select date & time';
       document.getElementById('pickup-field').classList.remove('filled');
       document.getElementById('return-field').classList.remove('filled');
+      document.getElementById('pickup-field').style.borderColor = '';
+      document.getElementById('rental-duration').textContent = 'That time slot is no longer available — please select a new time.';
+      document.getElementById('rental-duration').style.color = '#c9705a';
       return;
     }
 

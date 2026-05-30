@@ -601,7 +601,7 @@
     var curH = n.getHours(), curM = n.getMinutes();
     var pastCutoff = isToday && (curH > 20 || (curH === 20 && curM >= 15));
     if (pastCutoff) return false;
-    var minHour = isToday ? curH + 1 : 0;
+    var minHour = isToday ? (curM > 0 ? curH + 2 : curH + 1) : 0;
     if (isSameDayAsPickup && pickupHour24 !== undefined) minHour = Math.max(minHour, pickupHour24 + 1);
     return CART_TIME_SLOTS.some(function(s) { return cartSlotTo24(s) >= minHour; });
   }
@@ -618,7 +618,7 @@
     var n = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
     var curH = n.getHours(), curM = n.getMinutes();
     var pastCutoff = isToday && (curH > 20 || (curH === 20 && curM >= 15));
-    var minHour = isToday ? curH + 1 : 0;
+    var minHour = isToday ? (curM > 0 ? curH + 2 : curH + 1) : 0;
     if (isSameDayAsPickup && pickupHour24 !== undefined) minHour = Math.max(minHour, pickupHour24 + 1);
     el.innerHTML = '';
     if (!pastCutoff) {

@@ -219,7 +219,7 @@
   <div style="font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-soft);margin:8px 0 16px;" id="successOrderNum"></div>
   <p class="success-msg">
     Thank you for your order. A confirmation has been sent to your email.<br><br>
-    A damage hold has been placed on your card and will be released after your items are returned in good condition.
+    A $175 damage hold has been placed on your card and will be released after your items are returned in good condition.
   </p>
   <a href="index.html" class="success-btn">Back to Home</a>
 </div>
@@ -269,15 +269,9 @@
       </div>
       <div class="form-row single">
         <div class="form-group" style="position:relative;">
-          <label class="form-label">Venue / Delivery Address</label>
+          <label class="form-label">Street Address</label>
           <input class="form-input" type="text" id="address" placeholder="123 Main St" autocomplete="off" oninput="fetchSuggestions(this.value)"/>
           <div id="suggestions-box" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:200;background:white;border:1px solid rgba(201,180,154,0.45);border-top:none;border-radius:0 0 8px 8px;box-shadow:0 8px 24px rgba(58,46,40,0.1);max-height:220px;overflow-y:auto;"></div>
-        </div>
-      </div>
-      <div class="form-row single" style="margin-top:14px;">
-        <div class="form-group">
-          <label class="form-label">Unit / Suite <span style="font-size:0.6rem;color:var(--text-soft);letter-spacing:0.05em;">(optional)</span></label>
-          <input class="form-input" type="text" id="apt" placeholder="e.g. Apt 4B, Unit 12, Floor 3, Suite 200"/>
         </div>
       </div>
       <div class="form-row" style="margin-top:14px;">
@@ -309,7 +303,7 @@
       <div class="policy-row"><div class="policy-dot"></div><span><strong>10+ days before event</strong> — 100% refund</span></div>
       <div class="policy-row"><div class="policy-dot"></div><span><strong>2–10 days before event</strong> — 50% refund</span></div>
       <div class="policy-row"><div class="policy-dot"></div><span><strong>Within 48 hours</strong> — no refund</span></div>
-      <div class="policy-row"><div class="policy-dot"></div><span>A fully refundable damage hold will be pre-authorized and released after safe return</span></div>
+      <div class="policy-row"><div class="policy-dot"></div><span>A <strong>$175 damage hold</strong> will be pre-authorized and released after safe return</span></div>
     </div>
 
     <!-- Rental agreement checkbox -->
@@ -333,7 +327,7 @@
       <strong>Total Due Today</strong>
       <strong id="depositDue">$0.00</strong>
     </div>
-    <button class="pay-btn" id="payBtn" onclick="handlePayment()">Pay Now</button>
+    <button class="pay-btn" id="payBtn" onclick="handlePayment()">Pay Deposit Now</button>
     <div class="secure-note">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
       Secured by Stripe · SSL Encrypted
@@ -485,10 +479,11 @@
     let hold = 0;
     cart.forEach(item => {
       if (item.productType === 'neon') hold += 50;
-      else hold += 100; // default to backdrop
+      else hold += 100;
     });
-    return hold;
+    return hold || 100;
   }
+  let orderTotalCached = 0;
   const DAMAGE_HOLD = calcDamageHold(cart);
 
   // ── Load cart and render summary
@@ -522,7 +517,8 @@
             ${item.ret !== 'Select date & time' ? `↩ ${item.ret}` : ''}
           </div>
         </div>
-        <div class="summary-item-price">$${(item.price * item.qty).toFixed(2)}</div>`;
+        <div class="summary-item-price">$${(item.price * item.qty * days).toFixed(2)}</div>
+          <div style="font-size:0.6rem;color:var(--text-soft);text-align:right;margin-top:2px;">$${item.price}/day × ${days}d × qty ${item.qty}</div>`;
       itemsEl.appendChild(div);
     });
 
@@ -661,10 +657,8 @@
     const email     = document.getElementById('email').value.trim();
     const phone     = document.getElementById('phone').value.trim();
     const address   = document.getElementById('address').value.trim();
-    const apt       = document.getElementById('apt').value.trim();
     const city      = document.getElementById('city').value.trim();
     const zip       = document.getElementById('zip').value.trim();
-    const fullAddress = apt ? `${address}, ${apt}, ${city}, CA ${zip}` : `${address}, ${city}, CA ${zip}`;
 
     // ── Contact section validation
     const contactBlock = document.querySelectorAll('.form-block')[0];
@@ -729,38 +723,6 @@
     errorEl.textContent = '';
 
     try {
-      // ── Final availability check before charging — prevents race conditions
-      function parseToISOLocal(display) {
-        const m = display.match(/(\w+ \d+, \d+) at (\d+):(\d+) (AM|PM)/);
-        if (!m) return null;
-        let h = parseInt(m[2]);
-        if (m[4] === 'PM' && h !== 12) h += 12;
-        if (m[4] === 'AM' && h === 12) h = 0;
-        const d = new Date(m[1]); d.setHours(h, parseInt(m[3]), 0, 0);
-        return d.toISOString();
-      }
-
-      for (const item of cart) {
-        const productId = item.productId || (item.title || 'unknown').toLowerCase().replace(/\s+/g, '-');
-        const pickupISO = parseToISOLocal(item.pickup);
-        const returnISO = parseToISOLocal(item.ret);
-        if (!pickupISO || !returnISO) continue;
-        try {
-          const avRes = await fetch('/.netlify/functions/check-availability', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ product_id: productId, pickup_datetime: pickupISO, return_datetime: returnISO, qty_requested: item.qty || 1 })
-          });
-          const avData = await avRes.json();
-          if (!avData.available) {
-            errorEl.textContent = `Sorry, "${item.title}" is no longer available for your selected dates. Please go back to cart and choose different dates.`;
-            btn.disabled = false;
-            btn.textContent = `Pay $${orderTotalCached > 0 ? orderTotalCached.toFixed(2) : ''} Now`;
-            return;
-          }
-        } catch(e) { /* fail open — don't block checkout if availability check fails */ }
-      }
-
       // Calculate subtotal multiplied by rental duration
       const subtotal = cart.reduce((s, i) => {
         const daysMatch = i.duration ? i.duration.match(/(\d+)\s*day/) : null;
@@ -782,7 +744,7 @@
           metadata: {
             customer_email: email,
             customer_phone: phone,
-            delivery_address: fullAddress,
+            delivery_address: `${address}, ${city}, CA ${zip}`,
             cart_items: JSON.stringify(cart.map(i => `${i.title} x${i.qty}`))
           }
         })
@@ -821,35 +783,6 @@
       const total2 = subtotal2 + tax2;
       const orderNum = 'TBB-' + Date.now().toString().slice(-8);
 
-      // Parse display datetime string to ISO format for Supabase
-      function parseToISO(display) {
-        const m = display.match(/(\w+ \d+, \d+) at (\d+):(\d+) (AM|PM)/);
-        if (!m) return null;
-        let h = parseInt(m[2]);
-        if (m[4] === 'PM' && h !== 12) h += 12;
-        if (m[4] === 'AM' && h === 12) h = 0;
-        const d = new Date(m[1]);
-        d.setHours(h, parseInt(m[3]), 0, 0);
-        return d.toISOString();
-      }
-
-      // Save each cart item as a booking in Supabase
-      try {
-        await Promise.all(cart2.map(item =>
-          fetch('/.netlify/functions/create-booking', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              product_id: item.productId || (item.title || 'unknown').toLowerCase().replace(/\s+/g, '-'),
-              order_number: orderNum,
-              pickup_datetime: parseToISO(item.pickup),
-              return_datetime: parseToISO(item.ret),
-              customer_email: email
-            })
-          })
-        ));
-      } catch(e) { console.error('Booking record failed:', e); }
-
       try {
         await fetch('/.netlify/functions/send-confirmation', {
           method: 'POST',
@@ -865,7 +798,7 @@
             subtotal: subtotal2.toFixed(2),
             tax: tax2.toFixed(2),
             total: total2.toFixed(2),
-            address: fullAddress,
+            address: `${address}, ${city}, CA ${zip}`,
             phone
           })
         });
@@ -880,7 +813,7 @@
     } catch (err) {
       errorEl.textContent = 'Something went wrong. Please try again.';
       btn.disabled = false;
-      btn.textContent = orderTotalCached > 0 ? `Pay $${orderTotalCached.toFixed(2)} Now` : 'Pay Now';
+      btn.textContent = 'Pay Deposit Now';
     }
   }
 </script>

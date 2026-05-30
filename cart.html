@@ -343,7 +343,7 @@
     .cal-day { text-align: center; padding: 7px 2px; font-size: 0.75rem; border-radius: 6px; cursor: pointer; color: var(--text-mid); transition: background 0.15s; }
     .cal-day:hover:not(.disabled):not(.empty) { background: rgba(201,180,154,0.2); }
     .cal-day.selected { background: var(--text-dark); color: white; }
-    .cal-day.today { color: var(--text-dark); font-weight: 400; }
+    .cal-day.today { color: var(--text-dark); font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
     .cal-day.disabled { color: rgba(201,180,154,0.4); cursor: default; }
     .cal-day.empty { cursor: default; }
     .picker-confirm-btn {
@@ -659,6 +659,19 @@
 
     editPickupDate = null;
     editReturnDate = null;
+
+    // Pre-populate editPickupDate from existing item so return picker can validate correctly
+    if (hasPickup) {
+      const m = item.pickup.match(/(\w+) (\d+), (\d+) at (\d+):(\d+) (AM|PM)/);
+      if (m) {
+        const monthIdx = ['January','February','March','April','May','June','July','August','September','October','November','December'].indexOf(m[1]);
+        editPickupDate = {
+          y: parseInt(m[3]), m: monthIdx, d: parseInt(m[2]),
+          h: parseInt(m[4]), min: parseInt(m[5]), ampm: m[6]
+        };
+      }
+    }
+
     document.getElementById('editModalOverlay').classList.add('open');
   }
 
@@ -772,8 +785,9 @@
     if (ampm === 'AM' && hour24 === 12) hour24 = 0;
     const selectedMs = new Date(selectedDay.y, selectedDay.m, selectedDay.d, hour24, parseInt(min)).getTime();
 
-    // Block past times if today is selected
-    if (selectedMs <= Date.now()) {
+    // Block past times — use PST time to match Bay Area business hours
+    const pstNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+    if (selectedMs <= pstNow.getTime()) {
       noteEl.textContent = 'That time has already passed — please select a future time.';
       noteEl.style.color = '#c9705a';
       closeCartPicker();
@@ -829,6 +843,23 @@
     }
     if (ret === 'Select date & time') {
       noteEl.textContent = 'Please select a return date.';
+      noteEl.style.color = '#c9705a';
+      return;
+    }
+    // Validate return is after pickup
+    function parseDisplay(str) {
+      const m = str.match(/(\w+ \d+, \d+) at (\d+):(\d+) (AM|PM)/);
+      if (!m) return null;
+      let h = parseInt(m[2]);
+      if (m[4]==='PM' && h!==12) h+=12;
+      if (m[4]==='AM' && h===12) h=0;
+      const d = new Date(m[1]); d.setHours(h, parseInt(m[3]), 0, 0);
+      return d;
+    }
+    const pickupDt = parseDisplay(pickup);
+    const retDt    = parseDisplay(ret);
+    if (pickupDt && retDt && retDt <= pickupDt) {
+      noteEl.textContent = 'Return must be after your pickup time.';
       noteEl.style.color = '#c9705a';
       return;
     }

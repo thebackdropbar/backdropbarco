@@ -371,16 +371,22 @@
   <div class="product-info">
     <div>
       <h1 class="product-title" id="productTitle">Loading...</h1>
-      <div id="productSize" style="font-size:0.72rem;color:var(--text-soft);letter-spacing:0.06em;margin-top:4px;"></div>
     </div>
 
-    <div class="product-price" id="productPrice">
-      $— <span>per day</span>
+    <!-- Rent / Buy toggle — only shown for items with a buyPrice -->
+    <div id="modeSwitcher" style="display:none;margin-top:14px;">
+      <div style="display:flex;gap:8px;">
+        <button id="modeRent" onclick="setMode('rent')" style="flex:1;padding:9px 0;border-radius:50px;border:1px solid var(--text-dark);background:var(--text-dark);color:white;font-family:'Jost',sans-serif;font-size:0.68rem;letter-spacing:0.16em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;">Rent</button>
+        <button id="modeBuy"  onclick="setMode('buy')"  style="flex:1;padding:9px 0;border-radius:50px;border:1px solid rgba(201,180,154,0.5);background:transparent;color:var(--text-mid);font-family:'Jost',sans-serif;font-size:0.68rem;letter-spacing:0.16em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;">Buy</button>
+      </div>
     </div>
-    <div style="font-size:0.65rem;color:var(--text-soft);letter-spacing:0.04em;margin-top:4px;">
+
+    <div class="product-price" id="productPrice" style="margin-top:14px;">
+      $— <span id="priceLabel">per day</span>
+    </div>
+    <div style="font-size:0.65rem;color:var(--text-soft);letter-spacing:0.04em;margin-top:4px;" id="deliveryNote">
       Delivery &amp; setup included — no extra fees
     </div>
-
 
     <div class="product-divider"></div>
 
@@ -408,8 +414,8 @@
     </div>
     -->
 
-    <!-- Rental dates -->
-    <div>
+    <!-- Rental dates — hidden in buy mode -->
+    <div id="rentalSection">
       <div class="variant-label">Rental Period</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px;">
         <div>
@@ -430,6 +436,13 @@
       <div id="rental-duration" style="font-size:0.65rem;letter-spacing:0.1em;color:var(--text-soft);min-height:18px;"></div>
     </div>
 
+    <!-- Buy mode note — shown only in buy mode -->
+    <div id="buySection" style="display:none;">
+      <div style="font-size:0.72rem;color:var(--text-soft);line-height:1.8;padding:12px 14px;background:rgba(245,238,230,0.6);border-radius:8px;border:1px solid rgba(201,180,154,0.25);">
+        Free same-day delivery within the Bay Area.<br>Shipping available across the US — fees apply outside the Bay.
+      </div>
+    </div>
+
     <!-- Custom date/time picker popup -->
     <div id="picker-overlay" onclick="closePicker()" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(58,46,40,0.3);"></div>
     <div id="picker-popup" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:600;background:white;border-radius:16px;padding:24px;box-shadow:0 12px 48px rgba(58,46,40,0.18);width:320px;max-width:92vw;">
@@ -437,15 +450,11 @@
         <span id="picker-title" style="font-size:0.65rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--text-soft);"></span>
         <button onclick="closePicker()" style="background:none;border:none;cursor:pointer;font-size:1.2rem;color:var(--text-soft);line-height:1;">✕</button>
       </div>
-
-      <!-- Month nav -->
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
         <button onclick="changeMonth(-1)" style="background:none;border:none;cursor:pointer;font-size:1.1rem;color:var(--text-mid);padding:4px 10px;">‹</button>
         <span id="cal-month-label" style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:300;color:var(--text-dark);"></span>
         <button onclick="changeMonth(1)" style="background:none;border:none;cursor:pointer;font-size:1.1rem;color:var(--text-mid);padding:4px 10px;">›</button>
       </div>
-
-      <!-- Day labels -->
       <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px;">
         <div style="text-align:center;font-size:0.58rem;letter-spacing:0.1em;color:var(--text-soft);padding:4px 0;">Su</div>
         <div style="text-align:center;font-size:0.58rem;letter-spacing:0.1em;color:var(--text-soft);padding:4px 0;">Mo</div>
@@ -455,36 +464,25 @@
         <div style="text-align:center;font-size:0.58rem;letter-spacing:0.1em;color:var(--text-soft);padding:4px 0;">Fr</div>
         <div style="text-align:center;font-size:0.58rem;letter-spacing:0.1em;color:var(--text-soft);padding:4px 0;">Sa</div>
       </div>
-
-      <!-- Calendar grid -->
       <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:16px;"></div>
-
-      <!-- Time selector -->
       <div style="border-top:1px solid rgba(201,180,154,0.25);padding-top:14px;">
         <div style="font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-soft);margin-bottom:10px;">Time</div>
         <div style="display:flex;gap:8px;align-items:center;">
           <select id="picker-hour" style="flex:1;padding:8px 10px;border:1px solid rgba(201,180,154,0.5);border-radius:8px;font-family:'Jost',sans-serif;font-size:0.78rem;color:var(--text-dark);background:white;cursor:pointer;"></select>
           <span style="color:var(--text-soft);font-size:1rem;">:</span>
           <select id="picker-min" style="flex:1;padding:8px 10px;border:1px solid rgba(201,180,154,0.5);border-radius:8px;font-family:'Jost',sans-serif;font-size:0.78rem;color:var(--text-dark);background:white;cursor:pointer;">
-            <option value="00">00</option>
-            <option value="15">15</option>
-            <option value="30">30</option>
-            <option value="45">45</option>
+            <option value="00">00</option><option value="15">15</option><option value="30">30</option><option value="45">45</option>
           </select>
           <select id="picker-ampm" style="flex:1;padding:8px 10px;border:1px solid rgba(201,180,154,0.5);border-radius:8px;font-family:'Jost',sans-serif;font-size:0.78rem;color:var(--text-dark);background:white;cursor:pointer;">
-            <option>AM</option>
-            <option>PM</option>
+            <option>AM</option><option>PM</option>
           </select>
         </div>
       </div>
-
       <button onclick="confirmPicker()" style="width:100%;margin-top:16px;padding:13px;background:var(--text-dark);color:white;border:none;border-radius:10px;font-family:'Jost',sans-serif;font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;cursor:pointer;">Confirm</button>
     </div>
 
     <!-- Add to cart -->
-    <button class="add-to-cart-btn" onclick="addToCart()">Add to Cart</button>
-
-    <!-- Go to cart -->
+    <button class="add-to-cart-btn" id="addToCartBtn" onclick="addToCart()">Add to Cart</button>
     <a href="cart.html" class="add-to-cart-btn" style="display:block;text-align:center;text-decoration:none;background:rgba(201,180,154,0.15);color:var(--text-dark);border:1px solid rgba(201,180,154,0.5);">Go to Cart</a>
   </div>
 
@@ -559,6 +557,50 @@
 </section>
 
 <script>
+  // ── Rent / Buy mode
+  let currentMode = 'rent';
+
+  function setMode(mode) {
+    currentMode = mode;
+    const rentBtn = document.getElementById('modeRent');
+    const buyBtn  = document.getElementById('modeBuy');
+    const rentalSection = document.getElementById('rentalSection');
+    const buySection    = document.getElementById('buySection');
+    const priceLabel    = document.getElementById('priceLabel');
+    const deliveryNote  = document.getElementById('deliveryNote');
+    const productPriceEl = document.getElementById('productPrice');
+
+    if (mode === 'rent') {
+      rentBtn.style.background = 'var(--text-dark)';
+      rentBtn.style.color = 'white';
+      rentBtn.style.borderColor = 'var(--text-dark)';
+      buyBtn.style.background = 'transparent';
+      buyBtn.style.color = 'var(--text-mid)';
+      buyBtn.style.borderColor = 'rgba(201,180,154,0.5)';
+      rentalSection.style.display = 'block';
+      buySection.style.display = 'none';
+      priceLabel.textContent = 'per day';
+      deliveryNote.textContent = 'Delivery & setup included — no extra fees';
+      // Restore rent price
+      const p = (typeof getProduct === 'function') ? getProduct(new URLSearchParams(window.location.search).get('product')) : null;
+      if (p) productPriceEl.innerHTML = '$' + p.price.toLocaleString() + ' <span id="priceLabel">per day</span>';
+    } else {
+      rentBtn.style.background = 'transparent';
+      rentBtn.style.color = 'var(--text-mid)';
+      rentBtn.style.borderColor = 'rgba(201,180,154,0.5)';
+      buyBtn.style.background = 'var(--text-dark)';
+      buyBtn.style.color = 'white';
+      buyBtn.style.borderColor = 'var(--text-dark)';
+      rentalSection.style.display = 'none';
+      buySection.style.display = 'block';
+      priceLabel.textContent = 'one-time purchase';
+      deliveryNote.textContent = 'Free same-day delivery in the Bay Area';
+      // Show buy price
+      const p = (typeof getProduct === 'function') ? getProduct(new URLSearchParams(window.location.search).get('product')) : null;
+      if (p && p.buyPrice) productPriceEl.innerHTML = '$' + p.buyPrice.toLocaleString() + ' <span id="priceLabel">one-time purchase</span>';
+    }
+  }
+
   // ── Load product from catalogue
   document.addEventListener('DOMContentLoaded', function() {
     const params = new URLSearchParams(window.location.search);
@@ -567,11 +609,13 @@
 
     if (product) {
       document.getElementById('productTitle').textContent = product.title;
-      document.getElementById('productPrice').innerHTML = `$${product.price.toLocaleString()} <span>per day</span>`;
-      const sizeEl = document.getElementById('productSize');
-      if (sizeEl && product.size && product.size !== 'TBD') {
-        sizeEl.textContent = product.size;
+      document.getElementById('productPrice').innerHTML = `$${product.price.toLocaleString()} <span id="priceLabel">per day</span>`;
+
+      // Show rent/buy toggle only for products with a buy price
+      if (product.buyPrice) {
+        document.getElementById('modeSwitcher').style.display = 'block';
       }
+
       if (product.images && product.images.length > 0) {
         const img = new Image();
         img.src = product.images[0];
@@ -582,14 +626,13 @@
       }
       // Neon sign add-on restriction
       if (product.addonOnly) {
-        const cart = JSON.parse(localStorage.getItem('tbb_cart') || '[]');
-        const hasBackdrop = cart.some(i => i.productType === 'backdrop');
-        const addBtn = document.querySelector('.add-to-cart-btn');
+        const cartItems = JSON.parse(localStorage.getItem('tbb_cart') || '[]');
+        const hasBackdrop = cartItems.some(i => i.productType === 'backdrop');
+        const addBtn = document.getElementById('addToCartBtn');
         if (!hasBackdrop && addBtn) {
           addBtn.disabled = true;
           addBtn.style.opacity = '0.5';
           addBtn.style.cursor = 'not-allowed';
-          addBtn.title = 'Add a backdrop to your cart first';
           const note = document.createElement('div');
           note.style.cssText = 'font-size:0.68rem;color:#c9705a;margin-top:8px;line-height:1.6;';
           note.textContent = 'Neon signs are an add-on to backdrop rentals. Please add a flower wall to your cart first.';
@@ -954,7 +997,30 @@
   }
 
   function addToCart() {
-    // Validate dates are selected
+    // ── BUY mode — no dates needed
+    if (currentMode === 'buy') {
+      const productId   = new URLSearchParams(window.location.search).get('product') || 'default';
+      const productData = (typeof getProduct === 'function') ? getProduct(productId) : null;
+      const buyPrice    = productData ? (productData.buyPrice || productData.price) : 0;
+      const title       = document.getElementById('productTitle').textContent;
+      const item = {
+        title, price: buyPrice, qty, pickup: 'N/A', ret: 'N/A',
+        duration: 'Purchase', imgHTML: document.getElementById('mainImageContent').innerHTML,
+        id: Date.now(), productId, productType: productData ? (productData.type || 'backdrop') : 'backdrop',
+        damageHold: 0, purchaseType: 'buy'
+      };
+      const existingCart = JSON.parse(localStorage.getItem('tbb_cart') || '[]');
+      existingCart.push(item);
+      localStorage.setItem('tbb_cart', JSON.stringify(existingCart));
+      const btn = document.getElementById('addToCartBtn');
+      btn.textContent = '✓ Added to Cart';
+      btn.style.background = '#7a6a60';
+      updateCartBadge();
+      setTimeout(() => { btn.textContent = 'Add to Cart'; btn.style.background = ''; }, 2000);
+      return;
+    }
+
+    // ── RENT mode — validate dates are selected
     const pickup = document.getElementById('pickup-display').textContent;
     const ret    = document.getElementById('return-display').textContent;
 

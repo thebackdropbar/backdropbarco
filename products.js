@@ -3,27 +3,27 @@ const PRODUCTS = {
 
   // ── FLOWER WALLS ──────────────────────────────────────────
   'red-rose-wall': {
-    id: 'red-rose-wall', title: 'Red Rose Flower Wall (8×8 ft)', price: 275,
+    id: 'red-rose-wall', buyPrice: 1500, title: 'Red Rose Flower Wall (8×8 ft)', price: 275,
     category: 'Flower Walls', size: '8ft × 8ft', damageHold: 100,
     type: 'backdrop', images: ['photos/red-rose-wall.jpg'], section: 'backdrops'
   },
   'blush-pink-wall': {
-    id: 'blush-pink-wall', title: 'Blush Pink Flower Wall (8×8 ft)', price: 275,
+    id: 'blush-pink-wall', buyPrice: 1500, title: 'Blush Pink Flower Wall (8×8 ft)', price: 275,
     category: 'Flower Walls', size: '8ft × 8ft', damageHold: 100,
     type: 'backdrop', images: ['photos/blush-pink-wall.jpg'], section: 'backdrops'
   },
   'baby-blue-wall': {
-    id: 'baby-blue-wall', title: 'Baby Blue Flower Wall (8×8 ft)', price: 275,
+    id: 'baby-blue-wall', buyPrice: 1500, title: 'Baby Blue Flower Wall (8×8 ft)', price: 275,
     category: 'Flower Walls', size: '8ft × 8ft', damageHold: 100,
     type: 'backdrop', images: ['photos/baby-blue-wall.jpg'], section: 'backdrops'
   },
   'garden-mix-wall': {
-    id: 'garden-mix-wall', title: 'Garden Mix Flower Wall (8×8 ft)', price: 275,
+    id: 'garden-mix-wall', buyPrice: 1500, title: 'Garden Mix Flower Wall (8×8 ft)', price: 275,
     category: 'Flower Walls', size: '8ft × 8ft', damageHold: 100,
     type: 'backdrop', images: ['photos/garden-mix-wall.jpg'], section: 'backdrops'
   },
   'white-blossom-wall': {
-    id: 'white-blossom-wall', title: 'White Blossom Flower Wall (8×8 ft)', price: 275,
+    id: 'white-blossom-wall', buyPrice: 1500, title: 'White Blossom Flower Wall (8×8 ft)', price: 275,
     category: 'Flower Walls', size: '8ft × 8ft', damageHold: 100,
     type: 'backdrop', images: ['photos/white-blossom-wall.jpg'], section: 'backdrops'
   },

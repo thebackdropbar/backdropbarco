@@ -495,62 +495,98 @@
     const rowsEl    = document.getElementById('summaryRows');
     const depositEl = document.getElementById('depositDue');
 
-    if (cart.length === 0) {
+    if (!itemsEl || !rowsEl) return;
+
+    itemsEl.innerHTML = '';
+    rowsEl.innerHTML  = '';
+
+    if (!cart || cart.length === 0) {
       itemsEl.innerHTML = '<p style="font-size:0.75rem;color:var(--text-soft);">Your cart is empty.</p>';
       return;
     }
 
     let subtotal = 0;
 
-    cart.forEach(item => {
+    cart.forEach(function(item) {
       const daysMatch = item.duration ? item.duration.match(/(\d+)\s*day/) : null;
       const days = daysMatch ? parseInt(daysMatch[1]) : 1;
-      const itemTotal = item.price * item.qty * days;
+      const price = parseFloat(item.price) || 0;
+      const qty   = parseInt(item.qty)   || 1;
+      const itemTotal = price * qty * days;
       subtotal += itemTotal;
 
-      const div = document.createElement('div');
-      div.className = 'summary-item';
+      // Build item row using pure DOM — no innerHTML with dynamic content
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(201,180,154,0.15);';
 
-      // Image — create separately to avoid backtick issues with SVG content
-      const imgDiv = document.createElement('div');
-      imgDiv.className = 'summary-item-img';
-      imgDiv.innerHTML = item.imgHTML || '';
+      // Colour swatch instead of SVG thumbnail
+      const swatch = document.createElement('div');
+      const isNeon = item.productType === 'neon';
+      swatch.style.cssText = `width:44px;height:54px;border-radius:6px;flex-shrink:0;background:${isNeon ? '#1a1a2e' : '#e8d4c4'};display:flex;align-items:center;justify-content:center;`;
+      swatch.innerHTML = isNeon
+        ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" stroke-linecap="round"><path d="M12 2a7 7 0 0 1 7 7c0 4-3 6-3 9H8c0-3-3-5-3-9a7 7 0 0 1 7-7z"/></svg>'
+        : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(160,120,100,0.6)" stroke-width="1.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
 
-      const infoDiv = document.createElement('div');
-      infoDiv.className = 'summary-item-info';
-      infoDiv.innerHTML = `
-        <div class="summary-item-name">${item.title}</div>
-        <div class="summary-item-variant">Qty ${item.qty}</div>
-        <div class="summary-item-dates">
-          ${item.pickup && item.pickup !== 'Select date & time' ? `📅 ${item.pickup}` : ''}
-          ${item.ret && item.ret !== 'Select date & time' ? `<br>↩ ${item.ret}` : ''}
-        </div>`;
+      // Info column
+      const info = document.createElement('div');
+      info.style.cssText = 'flex:1;min-width:0;';
 
-      const priceDiv = document.createElement('div');
-      priceDiv.className = 'summary-item-price';
-      priceDiv.innerHTML = `$${itemTotal.toFixed(2)}<div style="font-size:0.6rem;color:var(--text-soft);margin-top:2px;">$${item.price}/day × ${days}d × ${item.qty}</div>`;
+      const name = document.createElement('div');
+      name.style.cssText = 'font-family:"Cormorant Garamond",serif;font-size:0.88rem;color:var(--text-dark);margin-bottom:3px;';
+      name.textContent = item.title || 'Item';
 
-      div.appendChild(imgDiv);
-      div.appendChild(infoDiv);
-      div.appendChild(priceDiv);
-      itemsEl.appendChild(div);
+      const meta = document.createElement('div');
+      meta.style.cssText = 'font-size:0.6rem;color:var(--text-soft);letter-spacing:0.08em;margin-bottom:4px;';
+      meta.textContent = 'Qty ' + qty + (days > 1 ? ' · ' + days + ' days' : ' · 1 day');
+
+      const dates = document.createElement('div');
+      dates.style.cssText = 'font-size:0.62rem;color:var(--text-mid);line-height:1.7;';
+      if (item.pickup && item.pickup !== 'Select date & time') {
+        dates.textContent = '📅 ' + item.pickup;
+      }
+      if (item.ret && item.ret !== 'Select date & time') {
+        const retLine = document.createElement('div');
+        retLine.textContent = '↩ ' + item.ret;
+        dates.appendChild(retLine);
+      }
+
+      info.appendChild(name);
+      info.appendChild(meta);
+      info.appendChild(dates);
+
+      // Price column
+      const priceCol = document.createElement('div');
+      priceCol.style.cssText = 'text-align:right;flex-shrink:0;';
+      const priceAmt = document.createElement('div');
+      priceAmt.style.cssText = 'font-size:0.88rem;color:var(--text-dark);';
+      priceAmt.textContent = '$' + itemTotal.toFixed(2);
+      const priceBreak = document.createElement('div');
+      priceBreak.style.cssText = 'font-size:0.58rem;color:var(--text-soft);margin-top:2px;';
+      priceBreak.textContent = '$' + price + '/day';
+      priceCol.appendChild(priceAmt);
+      priceCol.appendChild(priceBreak);
+
+      row.appendChild(swatch);
+      row.appendChild(info);
+      row.appendChild(priceCol);
+      itemsEl.appendChild(row);
     });
 
-    const tax      = subtotal * TAX_RATE;
+    const tax        = subtotal * TAX_RATE;
     const orderTotal = subtotal + tax;
 
     rowsEl.innerHTML = `
       <div class="summary-row"><span>Subtotal</span><span>$${subtotal.toFixed(2)}</span></div>
       <div class="summary-row"><span>CA Sales Tax (9.875%)</span><span>$${tax.toFixed(2)}</span></div>
       <div class="summary-row total" style="margin-top:8px;"><strong>Total Due Today</strong><strong>$${orderTotal.toFixed(2)}</strong></div>
-      <div style="margin-top:10px;padding:10px 12px;background:rgba(29,158,117,0.07);border:1px solid rgba(29,158,117,0.2);border-radius:8px;font-size:0.62rem;color:#0f6e56;line-height:1.7;letter-spacing:0.04em;">
+      <div style="margin-top:10px;padding:10px 12px;background:rgba(29,158,117,0.07);border:1px solid rgba(29,158,117,0.2);border-radius:8px;font-size:0.62rem;color:#0f6e56;line-height:1.7;">
         ✓ &nbsp;Fully refundable if cancelled 10+ days before your event
       </div>
       <div style="margin-top:8px;padding:10px 12px;background:rgba(245,238,230,0.6);border:1px solid rgba(201,180,154,0.25);border-radius:8px;font-size:0.62rem;color:var(--text-soft);line-height:1.7;">
         A <strong style="color:var(--text-mid);">$${DAMAGE_HOLD.toFixed(2)} damage hold</strong> will be pre-authorized on your card — fully refundable upon safe return of all items within 5–7 days.
       </div>`;
 
-    depositEl.textContent = '$' + orderTotal.toFixed(2);
+    if (depositEl) depositEl.textContent = '$' + orderTotal.toFixed(2);
     orderTotalCached = orderTotal;
     document.getElementById('payBtn').textContent = `Pay $${orderTotal.toFixed(2)} Now`;
   }

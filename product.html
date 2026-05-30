@@ -419,14 +419,14 @@
       <div class="variant-label">Rental Period</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px;">
         <div>
-          <div style="font-size:0.6rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-soft);margin-bottom:6px;">Needed By</div>
+          <div style="font-size:0.6rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-soft);margin-bottom:6px;">Needed By <span style="opacity:0.6;">(PST)</span></div>
           <div class="date-field" id="pickup-field" onclick="openPicker('pickup')">
             <span id="pickup-display">Select date &amp; time</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           </div>
         </div>
         <div>
-          <div style="font-size:0.6rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-soft);margin-bottom:6px;">Return By</div>
+          <div style="font-size:0.6rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-soft);margin-bottom:6px;">Return By <span style="opacity:0.6;">(PST)</span></div>
           <div class="date-field" id="return-field" onclick="openPicker('return')">
             <span id="return-display">Select date &amp; time</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -466,7 +466,7 @@
       </div>
       <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:16px;"></div>
       <div style="border-top:1px solid rgba(201,180,154,0.25);padding-top:14px;">
-        <div style="font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-soft);margin-bottom:10px;">Time</div>
+        <div style="font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-soft);margin-bottom:10px;">Time <span style="letter-spacing:0.08em;color:rgba(169,149,137,0.7);">(PST)</span></div>
         <div style="display:flex;gap:8px;align-items:center;">
           <select id="picker-hour" style="flex:1;padding:8px 10px;border:1px solid rgba(201,180,154,0.5);border-radius:8px;font-family:'Jost',sans-serif;font-size:0.78rem;color:var(--text-dark);background:white;cursor:pointer;"></select>
           <span style="color:var(--text-soft);font-size:1rem;">:</span>
@@ -749,7 +749,8 @@
       return;
     }
 
-    const cur = new Date();
+    // Always use Bay Area (PST/PDT) time — delivery happens in the Bay regardless of customer timezone
+    const cur = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
     const curH = cur.getHours(), curM = cur.getMinutes();
     const CUTOFF_H = 20, CUTOFF_M = 15;
     const pastCutoff = isToday && (curH > CUTOFF_H || (curH === CUTOFF_H && curM >= CUTOFF_M));
@@ -831,9 +832,10 @@
 
     const firstDay = new Date(calYear, calMonth, 1).getDay();
     const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
-    const todayDate = now.getDate();
-    const todayMonth = now.getMonth();
-    const todayYear = now.getFullYear();
+    const pstToday = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+    const todayDate = pstToday.getDate();
+    const todayMonth = pstToday.getMonth();
+    const todayYear = pstToday.getFullYear();
 
     // Empty cells
     for (let i = 0; i < firstDay; i++) {
@@ -875,7 +877,8 @@
 
   function selectDay(d) {
     selectedDay = { d, m: calMonth, y: calYear };
-    const isToday = (calYear === now.getFullYear() && calMonth === now.getMonth() && d === now.getDate());
+    const pstNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+    const isToday = (calYear === pstNow.getFullYear() && calMonth === pstNow.getMonth() && d === pstNow.getDate());
     // For return picker: check if selected day is same as pickup day
     let isSameDayAsPickup = false;
     let pickupHour24 = undefined;

@@ -596,10 +596,10 @@
   function rebuildCartHours(isToday) {
     var el = document.getElementById('cartPickerHour');
     if (!el) return;
-    var n = new Date();
+    var n = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
     var curH = n.getHours(), curM = n.getMinutes();
-    var LAST_BOOKING_HOUR = 20; // 8 PM — after 8:15 PM no same-day slots
-    var pastCutoff = isToday && (curH > LAST_BOOKING_HOUR || (curH === LAST_BOOKING_HOUR && curM > 15));
+    var LAST_BOOKING_HOUR = 20;
+    var pastCutoff = isToday && (curH > LAST_BOOKING_HOUR || (curH === LAST_BOOKING_HOUR && curM >= 15));
     var minHour = isToday ? curH + 1 : 0;
     el.innerHTML = '';
     if (!pastCutoff) {

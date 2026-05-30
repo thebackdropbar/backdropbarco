@@ -219,7 +219,7 @@
   <div style="font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-soft);margin:8px 0 16px;" id="successOrderNum"></div>
   <p class="success-msg">
     Thank you for your order. A confirmation has been sent to your email.<br><br>
-    A $175 damage hold has been placed on your card and will be released after your items are returned in good condition.
+    A damage hold has been pre-authorized on your card and will be released after your items are returned in good condition.
   </p>
   <a href="index.html" class="success-btn">Back to Home</a>
 </div>
@@ -303,7 +303,7 @@
       <div class="policy-row"><div class="policy-dot"></div><span><strong>10+ days before event</strong> — 100% refund</span></div>
       <div class="policy-row"><div class="policy-dot"></div><span><strong>2–10 days before event</strong> — 50% refund</span></div>
       <div class="policy-row"><div class="policy-dot"></div><span><strong>Within 48 hours</strong> — no refund</span></div>
-      <div class="policy-row"><div class="policy-dot"></div><span>A <strong>$175 damage hold</strong> will be pre-authorized and released after safe return</span></div>
+      <div class="policy-row"><div class="policy-dot"></div><span>A <strong id="policyHoldAmount">$100 damage hold</strong> will be pre-authorized and released after safe return</span></div>
     </div>
 
     <!-- Rental agreement checkbox -->
@@ -605,6 +605,10 @@
   }
 
   renderSummary();
+  // Update policy text with dynamic hold amount
+  const policyHold = document.getElementById('policyHoldAmount');
+  if (policyHold) policyHold.textContent = '$' + DAMAGE_HOLD.toFixed(0) + ' damage hold';
+
 
   // ── Bay Area ZIP codes only (within ~50 miles of Fremont)
   const VALID_ZIPS = new Set([

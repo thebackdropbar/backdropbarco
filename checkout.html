@@ -327,7 +327,7 @@
       <strong>Total Due Today</strong>
       <strong id="depositDue">$0.00</strong>
     </div>
-    <button class="pay-btn" id="payBtn" onclick="handlePayment()">Pay Deposit Now</button>
+    <button class="pay-btn" id="payBtn" onclick="handlePayment()">Pay Now</button>
     <div class="secure-note">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
       Secured by Stripe · SSL Encrypted
@@ -474,17 +474,18 @@
 
   // ── Tax rate for Bay Area CA (~9.875% average)
   const TAX_RATE = 0.09875;
+
   // Dynamic damage hold: $100 per backdrop, $50 per neon sign
-  function calcDamageHold(cart) {
+  function calcDamageHold(cartItems) {
     let hold = 0;
-    cart.forEach(item => {
+    cartItems.forEach(item => {
       if (item.productType === 'neon') hold += 50;
       else hold += 100;
     });
     return hold || 100;
   }
-  let orderTotalCached = 0;
   const DAMAGE_HOLD = calcDamageHold(cart);
+  let orderTotalCached = 0;
 
   // ── Load cart and render summary
   const cart = JSON.parse(localStorage.getItem('tbb_cart') || '[]');
@@ -504,21 +505,34 @@
     cart.forEach(item => {
       const daysMatch = item.duration ? item.duration.match(/(\d+)\s*day/) : null;
       const days = daysMatch ? parseInt(daysMatch[1]) : 1;
-      subtotal += item.price * item.qty * days;
+      const itemTotal = item.price * item.qty * days;
+      subtotal += itemTotal;
+
       const div = document.createElement('div');
       div.className = 'summary-item';
-      div.innerHTML = `
-        <div class="summary-item-img">${item.imgHTML}</div>
-        <div class="summary-item-info">
-          <div class="summary-item-name">${item.title}</div>
-          <div class="summary-item-variant">${item.variant} · Qty ${item.qty}</div>
-          <div class="summary-item-dates">
-            ${item.pickup !== 'Select date & time' ? `📅 ${item.pickup}` : ''}<br>
-            ${item.ret !== 'Select date & time' ? `↩ ${item.ret}` : ''}
-          </div>
-        </div>
-        <div class="summary-item-price">$${(item.price * item.qty * days).toFixed(2)}</div>
-          <div style="font-size:0.6rem;color:var(--text-soft);text-align:right;margin-top:2px;">$${item.price}/day × ${days}d × qty ${item.qty}</div>`;
+
+      // Image — create separately to avoid backtick issues with SVG content
+      const imgDiv = document.createElement('div');
+      imgDiv.className = 'summary-item-img';
+      imgDiv.innerHTML = item.imgHTML || '';
+
+      const infoDiv = document.createElement('div');
+      infoDiv.className = 'summary-item-info';
+      infoDiv.innerHTML = `
+        <div class="summary-item-name">${item.title}</div>
+        <div class="summary-item-variant">Qty ${item.qty}</div>
+        <div class="summary-item-dates">
+          ${item.pickup && item.pickup !== 'Select date & time' ? `📅 ${item.pickup}` : ''}
+          ${item.ret && item.ret !== 'Select date & time' ? `<br>↩ ${item.ret}` : ''}
+        </div>`;
+
+      const priceDiv = document.createElement('div');
+      priceDiv.className = 'summary-item-price';
+      priceDiv.innerHTML = `$${itemTotal.toFixed(2)}<div style="font-size:0.6rem;color:var(--text-soft);margin-top:2px;">$${item.price}/day × ${days}d × ${item.qty}</div>`;
+
+      div.appendChild(imgDiv);
+      div.appendChild(infoDiv);
+      div.appendChild(priceDiv);
       itemsEl.appendChild(div);
     });
 
@@ -533,14 +547,12 @@
         ✓ &nbsp;Fully refundable if cancelled 10+ days before your event
       </div>
       <div style="margin-top:8px;padding:10px 12px;background:rgba(245,238,230,0.6);border:1px solid rgba(201,180,154,0.25);border-radius:8px;font-size:0.62rem;color:var(--text-soft);line-height:1.7;">
-        A <strong style="color:var(--text-mid);" id="damageHoldNote">damage hold</strong> will be pre-authorized on your card — fully refundable upon safe return of all items within 5–7 days.
+        A <strong style="color:var(--text-mid);">$${DAMAGE_HOLD.toFixed(2)} damage hold</strong> will be pre-authorized on your card — fully refundable upon safe return of all items within 5–7 days.
       </div>`;
 
     depositEl.textContent = '$' + orderTotal.toFixed(2);
     orderTotalCached = orderTotal;
     document.getElementById('payBtn').textContent = `Pay $${orderTotal.toFixed(2)} Now`;
-    const holdNote = document.getElementById('damageHoldNote');
-    if (holdNote) holdNote.textContent = `$${DAMAGE_HOLD.toFixed(2)} damage hold`;
   }
 
   function isWithin48Hours() {
@@ -651,6 +663,15 @@
     const errorEl = document.getElementById('cardError');
     clearAllErrors();
     let hasError = false;
+
+    // ── Neon sign add-on check — must have a backdrop in cart
+    const hasNeon     = cart.some(i => i.productType === 'neon');
+    const hasBackdrop = cart.some(i => i.productType !== 'neon');
+    if (hasNeon && !hasBackdrop) {
+      errorEl.textContent = 'Neon signs can only be ordered with a flower wall rental. Please add a backdrop to your cart or remove the neon sign.';
+      errorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
 
     const firstName = document.getElementById('firstName').value.trim();
     const lastName  = document.getElementById('lastName').value.trim();
@@ -813,7 +834,7 @@
     } catch (err) {
       errorEl.textContent = 'Something went wrong. Please try again.';
       btn.disabled = false;
-      btn.textContent = 'Pay Deposit Now';
+      btn.textContent = orderTotalCached > 0 ? `Pay $${orderTotalCached.toFixed(2)} Now` : 'Pay Now';
     }
   }
 </script>

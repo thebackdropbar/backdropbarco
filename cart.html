@@ -803,6 +803,14 @@
 
   function validateCartDates() {
     const cart = loadCart();
+
+    // Neon sign add-on check
+    const hasNeon     = cart.some(i => i.productType === 'neon');
+    const hasBackdrop = cart.some(i => i.productType !== 'neon');
+    if (hasNeon && !hasBackdrop) {
+      alert('Neon signs can only be ordered with a flower wall rental. Please add a backdrop to your cart or remove the neon sign.');
+      return false;
+    }
     const missing = cart.filter(i =>
       !i.pickup || i.pickup === 'Select date & time' ||
       !i.ret    || i.ret    === 'Select date & time'

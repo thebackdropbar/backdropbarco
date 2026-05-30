@@ -263,9 +263,9 @@
 
     <!-- Delivery address -->
     <div class="form-block">
-      <div class="form-block-title">Delivery Address</div>
+      <div class="form-block-title">Venue / Rental Address</div>
       <div style="font-size:0.65rem;color:var(--text-soft);margin-bottom:14px;line-height:1.7;">
-        We are proud to serve the greater Bay Area — available for delivery within 50 miles of Fremont, California.
+        Where should we deliver and set up your rental? Must be within the Bay Area.
       </div>
       <div class="form-row single">
         <div class="form-group" style="position:relative;">
@@ -284,6 +284,38 @@
           <input class="form-input" type="text" id="zip" placeholder="94102"/>
         </div>
       </div>
+    </div>
+
+    <!-- Purchase delivery address — only shown when cart has purchased items -->
+    <div class="form-block" id="purchaseAddressBlock" style="display:none;">
+      <div class="form-block-title">Purchase Delivery Address</div>
+      <div style="font-size:0.65rem;color:var(--text-soft);margin-bottom:14px;line-height:1.7;">
+        Where should we ship your purchased items? Free same-day delivery within the Bay Area. A $100 shipping fee applies for deliveries elsewhere in the US. No international shipping.
+      </div>
+      <div class="form-row single">
+        <div class="form-group" style="position:relative;">
+          <label class="form-label">Street Address</label>
+          <input class="form-input" type="text" id="purchaseAddress" placeholder="123 Main St" autocomplete="off" oninput="fetchPurchaseSuggestions(this.value)"/>
+          <div id="purchase-suggestions-box" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:200;background:white;border:1px solid rgba(201,180,154,0.45);border-top:none;border-radius:0 0 8px 8px;box-shadow:0 8px 24px rgba(58,46,40,0.1);max-height:220px;overflow-y:auto;"></div>
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:14px;">
+        <div class="form-group">
+          <label class="form-label">City</label>
+          <input class="form-input" type="text" id="purchaseCity" placeholder="San Francisco"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ZIP Code</label>
+          <input class="form-input" type="text" id="purchaseZip" placeholder="94102" oninput="checkPurchaseShipping(this.value)"/>
+        </div>
+      </div>
+      <div class="form-row single" style="margin-top:14px;">
+        <div class="form-group">
+          <label class="form-label">State</label>
+          <input class="form-input" type="text" id="purchaseState" placeholder="CA" maxlength="2" style="text-transform:uppercase;"/>
+        </div>
+      </div>
+      <div id="purchaseShippingNote" style="font-size:0.65rem;margin-top:10px;line-height:1.7;display:none;padding:10px 12px;border-radius:8px;"></div>
     </div>
 
     <!-- Payment -->
@@ -478,14 +510,15 @@
   // ── Load cart first — must be before calcDamageHold
   const cart = JSON.parse(localStorage.getItem('tbb_cart') || '[]');
 
-  // Dynamic damage hold: $100 per backdrop, $50 per neon sign
+  // Dynamic damage hold: only rental items — $100 per backdrop, $50 per neon sign, $0 for purchases
   function calcDamageHold(cartItems) {
     let hold = 0;
     cartItems.forEach(item => {
+      if (item.purchaseType === 'buy') return; // purchases have no damage hold
       if (item.productType === 'neon') hold += 50;
       else hold += 100;
     });
-    return hold || 100;
+    return hold;
   }
   const DAMAGE_HOLD = calcDamageHold(cart);
   let orderTotalCached = 0;
@@ -508,18 +541,17 @@
     let subtotal = 0;
 
     cart.forEach(function(item) {
-      const daysMatch = item.duration ? item.duration.match(/(\d+)\s*day/) : null;
-      const days = daysMatch ? parseInt(daysMatch[1]) : 1;
-      const price = parseFloat(item.price) || 0;
-      const qty   = parseInt(item.qty)   || 1;
+      const isBuy  = item.purchaseType === 'buy';
+      const daysMatch = (!isBuy && item.duration) ? item.duration.match(/(\d+)\s*day/) : null;
+      const days   = isBuy ? 1 : (daysMatch ? parseInt(daysMatch[1]) : 1);
+      const price  = parseFloat(item.price) || 0;
+      const qty    = parseInt(item.qty) || 1;
       const itemTotal = price * qty * days;
       subtotal += itemTotal;
 
-      // Build item row using pure DOM — no innerHTML with dynamic content
       const row = document.createElement('div');
       row.style.cssText = 'display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(201,180,154,0.15);';
 
-      // Colour swatch instead of SVG thumbnail
       const swatch = document.createElement('div');
       const isNeon = item.productType === 'neon';
       swatch.style.cssText = `width:44px;height:54px;border-radius:6px;flex-shrink:0;background:${isNeon ? '#1a1a2e' : '#e8d4c4'};display:flex;align-items:center;justify-content:center;`;
@@ -527,7 +559,6 @@
         ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" stroke-linecap="round"><path d="M12 2a7 7 0 0 1 7 7c0 4-3 6-3 9H8c0-3-3-5-3-9a7 7 0 0 1 7-7z"/></svg>'
         : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(160,120,100,0.6)" stroke-width="1.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
 
-      // Info column
       const info = document.createElement('div');
       info.style.cssText = 'flex:1;min-width:0;';
 
@@ -537,34 +568,43 @@
 
       const meta = document.createElement('div');
       meta.style.cssText = 'font-size:0.6rem;color:var(--text-soft);letter-spacing:0.08em;margin-bottom:4px;';
-      meta.textContent = 'Qty ' + qty + (days > 1 ? ' · ' + days + ' days' : ' · 1 day');
-
-      const dates = document.createElement('div');
-      dates.style.cssText = 'font-size:0.62rem;color:var(--text-mid);line-height:1.7;';
-      if (item.pickup && item.pickup !== 'Select date & time') {
-        dates.textContent = '📅 ' + item.pickup;
-      }
-      if (item.ret && item.ret !== 'Select date & time') {
-        const retLine = document.createElement('div');
-        retLine.textContent = '↩ ' + item.ret;
-        dates.appendChild(retLine);
-      }
+      // Buy: just show qty. Rent: show qty + days
+      meta.textContent = isBuy
+        ? 'Purchase · Qty ' + qty
+        : 'Qty ' + qty + (days > 1 ? ' · ' + days + ' days' : ' · 1 day');
 
       info.appendChild(name);
       info.appendChild(meta);
-      info.appendChild(dates);
 
-      // Price column
+      // Only show dates for rental items
+      if (!isBuy) {
+        const dates = document.createElement('div');
+        dates.style.cssText = 'font-size:0.62rem;color:var(--text-mid);line-height:1.7;';
+
+        if (item.pickup && item.pickup !== 'Select date & time') {
+          dates.textContent = '📅 ' + item.pickup;
+        }
+        if (item.ret && item.ret !== 'Select date & time') {
+          const retLine = document.createElement('div');
+          retLine.textContent = '↩ ' + item.ret;
+          dates.appendChild(retLine);
+        }
+        info.appendChild(dates);
+      }
+
+      // Price column — no breakdown subtext for buy items
       const priceCol = document.createElement('div');
       priceCol.style.cssText = 'text-align:right;flex-shrink:0;';
       const priceAmt = document.createElement('div');
       priceAmt.style.cssText = 'font-size:0.88rem;color:var(--text-dark);';
       priceAmt.textContent = '$' + itemTotal.toFixed(2);
-      const priceBreak = document.createElement('div');
-      priceBreak.style.cssText = 'font-size:0.58rem;color:var(--text-soft);margin-top:2px;';
-      priceBreak.textContent = '$' + price + '/day';
       priceCol.appendChild(priceAmt);
-      priceCol.appendChild(priceBreak);
+      if (!isBuy) {
+        const priceBreak = document.createElement('div');
+        priceBreak.style.cssText = 'font-size:0.58rem;color:var(--text-soft);margin-top:2px;';
+        priceBreak.textContent = '$' + price + '/day';
+        priceCol.appendChild(priceBreak);
+      }
 
       row.appendChild(swatch);
       row.appendChild(info);
@@ -573,18 +613,20 @@
     });
 
     const tax        = subtotal * TAX_RATE;
-    const orderTotal = subtotal + tax;
+    const orderTotal = subtotal + tax + shippingFee;
 
     rowsEl.innerHTML = `
       <div class="summary-row"><span>Subtotal</span><span>$${subtotal.toFixed(2)}</span></div>
       <div class="summary-row"><span>CA Sales Tax (9.875%)</span><span>$${tax.toFixed(2)}</span></div>
+      ${shippingFee > 0 ? `<div class="summary-row"><span>Shipping</span><span>$${shippingFee.toFixed(2)}</span></div>` : ''}
       <div class="summary-row total" style="margin-top:8px;"><strong>Total Due Today</strong><strong>$${orderTotal.toFixed(2)}</strong></div>
       <div style="margin-top:10px;padding:10px 12px;background:rgba(29,158,117,0.07);border:1px solid rgba(29,158,117,0.2);border-radius:8px;font-size:0.62rem;color:#0f6e56;line-height:1.7;">
         ✓ &nbsp;Fully refundable if cancelled 10+ days before your event
       </div>
+      ${DAMAGE_HOLD > 0 ? `
       <div style="margin-top:8px;padding:10px 12px;background:rgba(245,238,230,0.6);border:1px solid rgba(201,180,154,0.25);border-radius:8px;font-size:0.62rem;color:var(--text-soft);line-height:1.7;">
         A <strong style="color:var(--text-mid);">$${DAMAGE_HOLD.toFixed(2)} damage hold</strong> will be pre-authorized on your card — fully refundable upon safe return of all items within 5–7 days.
-      </div>`;
+      </div>` : ''}`;
 
     if (depositEl) depositEl.textContent = '$' + orderTotal.toFixed(2);
     orderTotalCached = orderTotal;
@@ -602,6 +644,79 @@
       }
     }
     return false;
+  }
+
+  // ── Show purchase address block if cart has any purchased items
+  const hasPurchases = cart.some(i => i.purchaseType === 'buy');
+  if (hasPurchases) {
+    const block = document.getElementById('purchaseAddressBlock');
+    if (block) block.style.display = 'block';
+  }
+
+  // ── Shipping fee logic
+  let shippingFee = 0;
+  const US_STATE_PATTERN = /^[A-Za-z]{2}$/;
+
+  function checkPurchaseShipping(zip) {
+    const note = document.getElementById('purchaseShippingNote');
+    if (!zip || zip.length < 5) { note.style.display = 'none'; shippingFee = 0; renderSummary(); return; }
+    if (VALID_ZIPS.has(zip.trim())) {
+      shippingFee = 0;
+      note.style.display = 'block';
+      note.style.background = 'rgba(29,158,117,0.07)';
+      note.style.border = '1px solid rgba(29,158,117,0.2)';
+      note.style.color = '#0f6e56';
+      note.textContent = '✓ Free same-day Bay Area delivery';
+    } else {
+      shippingFee = 100;
+      note.style.display = 'block';
+      note.style.background = 'rgba(245,238,230,0.6)';
+      note.style.border = '1px solid rgba(201,180,154,0.25)';
+      note.style.color = 'var(--text-soft)';
+      note.textContent = '$100 shipping fee applies — delivery outside the Bay Area';
+    }
+    renderSummary();
+  }
+
+  // ── Purchase address autocomplete (reuse same Photon API)
+  let purchaseTimer = null;
+  async function fetchPurchaseSuggestions(val) {
+    const box = document.getElementById('purchase-suggestions-box');
+    if (!val || val.length < 1) { box.style.display = 'none'; return; }
+    clearTimeout(purchaseTimer);
+    purchaseTimer = setTimeout(async () => {
+      try {
+        const r = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(val + ' USA')}&limit=5&lang=en`);
+        const d = await r.json();
+        const features = d.features || [];
+        box.innerHTML = '';
+        if (!features.length) { box.style.display = 'none'; return; }
+        box.style.display = 'block';
+        features.forEach(f => {
+          const p = f.properties;
+          const street = [p.housenumber, p.street || p.name].filter(Boolean).join(' ');
+          const city = p.city || p.town || p.village || '';
+          const label = [street, city, p.state].filter(Boolean).join(', ');
+          if (!label) return;
+          const item = document.createElement('div');
+          item.style.cssText = 'padding:10px 14px;cursor:pointer;font-size:0.75rem;color:var(--text-dark);border-bottom:1px solid rgba(201,180,154,0.1);';
+          item.textContent = label;
+          item.onmouseenter = () => item.style.background = 'rgba(245,238,230,0.6)';
+          item.onmouseleave = () => item.style.background = '';
+          item.onclick = () => {
+            document.getElementById('purchaseAddress').value = street;
+            document.getElementById('purchaseCity').value = city;
+            if (p.state) document.getElementById('purchaseState').value = p.state.length <= 2 ? p.state.toUpperCase() : p.state;
+            if (p.postcode) {
+              document.getElementById('purchaseZip').value = p.postcode.slice(0,5);
+              checkPurchaseShipping(p.postcode.slice(0,5));
+            }
+            box.style.display = 'none';
+          };
+          box.appendChild(item);
+        });
+      } catch(e) { box.style.display = 'none'; }
+    }, 250);
   }
 
   renderSummary();
@@ -704,7 +819,23 @@
     clearAllErrors();
     let hasError = false;
 
-    // ── Neon sign add-on check — must have a backdrop in cart
+    // ── Purchase address validation (if cart has purchases)
+    if (hasPurchases) {
+      const pAddr  = document.getElementById('purchaseAddress').value.trim();
+      const pCity  = document.getElementById('purchaseCity').value.trim();
+      const pZip   = document.getElementById('purchaseZip').value.trim();
+      const pState = document.getElementById('purchaseState').value.trim().toUpperCase();
+      if (!pAddr || !pCity || !pZip) {
+        errorEl.textContent = 'Please fill in a delivery address for your purchased items.';
+        errorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+      if (!pState || pState.length !== 2) {
+        errorEl.textContent = 'Please enter a valid US state for your purchase delivery address.';
+        errorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+    }
     const hasNeon     = cart.some(i => i.productType === 'neon');
     const hasBackdrop = cart.some(i => i.productType !== 'neon');
     if (hasNeon && !hasBackdrop) {

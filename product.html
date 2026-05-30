@@ -370,15 +370,14 @@
   <!-- RIGHT: Info -->
   <div class="product-info">
     <div>
-      <div class="product-category" id="productCategory">The Backdrop Bar</div>
       <h1 class="product-title" id="productTitle">Loading...</h1>
+      <div id="productSize" style="font-size:0.72rem;color:var(--text-soft);letter-spacing:0.06em;margin-top:4px;"></div>
     </div>
 
     <div class="product-price" id="productPrice">
       $— <span>per day</span>
     </div>
 
-    <div id="productSize" style="font-size:0.68rem;color:var(--text-soft);letter-spacing:0.08em;margin-top:-8px;margin-bottom:4px;"></div>
 
     <div class="product-divider"></div>
 
@@ -566,22 +565,33 @@
     if (product) {
       document.getElementById('productTitle').textContent = product.title;
       document.getElementById('productPrice').innerHTML = `$${product.price.toLocaleString()} <span>per day</span>`;
-      document.getElementById('productCategory').textContent = `${product.category} · The Backdrop Bar`;
-      if (product.size && product.size !== 'TBD') {
-        document.getElementById('productSize').textContent = product.size;
+      const sizeEl = document.getElementById('productSize');
+      if (sizeEl && product.size && product.size !== 'TBD') {
+        sizeEl.textContent = product.size;
       }
       if (product.images && product.images.length > 0) {
         const img = new Image();
         img.src = product.images[0];
-        img.onerror = function() { /* keep placeholder */ };
         img.onload = function() {
           document.getElementById('mainImageContent').innerHTML =
             `<img src="${product.images[0]}" alt="${product.title}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">`;
-          product.images.slice(1).forEach((src, i) => {
-            const thumb = document.querySelectorAll('.thumb')[i + 1];
-            if (thumb) thumb.innerHTML = `<img src="${src}" alt="${product.title}" style="width:100%;height:100%;object-fit:cover;">`;
-          });
         };
+      }
+      // Neon sign add-on restriction
+      if (product.addonOnly) {
+        const cart = JSON.parse(localStorage.getItem('tbb_cart') || '[]');
+        const hasBackdrop = cart.some(i => i.productType === 'backdrop');
+        const addBtn = document.querySelector('.add-to-cart-btn');
+        if (!hasBackdrop && addBtn) {
+          addBtn.disabled = true;
+          addBtn.style.opacity = '0.5';
+          addBtn.style.cursor = 'not-allowed';
+          addBtn.title = 'Add a backdrop to your cart first';
+          const note = document.createElement('div');
+          note.style.cssText = 'font-size:0.68rem;color:#c9705a;margin-top:8px;line-height:1.6;';
+          note.textContent = 'Neon signs are an add-on to backdrop rentals. Please add a flower wall to your cart first.';
+          addBtn.parentNode.insertBefore(note, addBtn.nextSibling);
+        }
       }
     } else if (id !== 'default') {
       window.location.href = 'index.html';
@@ -679,17 +689,29 @@
   function rebuildHours(isToday, isSameDayAsPickup, pickupHour24) {
     const el = document.getElementById('picker-hour');
     if (!el) return;
+    el.innerHTML = '';
+
+    // If no day selected yet — show placeholder, keep disabled
+    if (!selectedDay) {
+      const o = document.createElement('option');
+      o.value = '';
+      o.textContent = 'Select a date first';
+      el.appendChild(o);
+      el.disabled = true; el.style.opacity = '0.4';
+      const minEl = document.getElementById('picker-min');
+      if (minEl) { minEl.disabled = true; minEl.style.opacity = '0.4'; }
+      return;
+    }
+
     const cur = new Date();
     const curH = cur.getHours(), curM = cur.getMinutes();
-    const CUTOFF_H = 20, CUTOFF_M = 15; // after 8:15 PM no same-day slots
-    // Fix: >= not > so 8:15 PM is blocked
+    const CUTOFF_H = 20, CUTOFF_M = 15;
     const pastCutoff = isToday && (curH > CUTOFF_H || (curH === CUTOFF_H && curM >= CUTOFF_M));
     let minHour = 0;
-    if (isToday) minHour = curH + 1;                          // 1hr buffer from now
+    if (isToday) minHour = curH + 1;
     if (isSameDayAsPickup && pickupHour24 !== undefined) {
-      minHour = Math.max(minHour, pickupHour24 + 1);          // return must be after pickup
+      minHour = Math.max(minHour, pickupHour24 + 1);
     }
-    el.innerHTML = '';
     if (!pastCutoff) {
       TIME_SLOTS.forEach(function(s) {
         if (slotTo24(s) < minHour) return;
@@ -707,15 +729,10 @@
         : 'No available times today — select a future date';
       el.appendChild(o);
     }
-    // Disable until a day is selected
+    // Enable since a day is selected
+    el.disabled = false; el.style.opacity = '1';
     const minEl = document.getElementById('picker-min');
-    if (!selectedDay) {
-      el.disabled = true; el.style.opacity = '0.4';
-      if (minEl) { minEl.disabled = true; minEl.style.opacity = '0.4'; }
-    } else {
-      el.disabled = false; el.style.opacity = '1';
-      if (minEl) { minEl.disabled = false; minEl.style.opacity = '1'; }
-    }
+    if (minEl) { minEl.disabled = false; minEl.style.opacity = '1'; }
   }
 
   document.addEventListener('DOMContentLoaded', function() {
@@ -989,7 +1006,10 @@
     const imgHTML  = document.getElementById('mainImageContent').innerHTML;
 
     const productId = new URLSearchParams(window.location.search).get('product') || 'default';
-    const item = { title, price, variant, qty, pickup, ret, duration, imgHTML, id: Date.now(), productId };
+    const productData = (typeof getProduct === 'function') ? getProduct(productId) : null;
+    const productType = productData ? (productData.type || 'backdrop') : 'backdrop';
+    const damageHold = productData ? (productData.damageHold || 100) : 100;
+    const item = { title, price, variant, qty, pickup, ret, duration, imgHTML, id: Date.now(), productId, productType, damageHold };
 
     let cart = JSON.parse(localStorage.getItem('tbb_cart') || '[]');
     cart.push(item);

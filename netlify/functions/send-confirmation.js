@@ -47,7 +47,9 @@ exports.handler = async (event) => {
 <table width="580" cellpadding="0" cellspacing="0" style="max-width:580px;width:100%;">
 
   <tr><td style="background:#3a2e28;padding:32px 40px;text-align:center;border-radius:14px 14px 0 0;">
-    <div style="font-family:Georgia,serif;font-size:28px;font-weight:300;color:#fdf8f3;letter-spacing:0.04em;">the backdrop bar</div>
+    <div style="font-family:Georgia,serif;font-size:28px;font-weight:300;color:#fdf8f3;letter-spacing:0.04em;"><div style="text-align:center;padding:32px 0 20px;">
+  <img src="https://backdropbarco.com/logo.png" alt="The Backdrop Bar Co." style="height:60px;width:auto;" />
+</div></div>
     <div style="width:36px;height:1px;background:rgba(201,180,154,0.5);margin:12px auto;"></div>
     <div style="font-size:10px;letter-spacing:0.24em;text-transform:uppercase;color:#c9b49a;">Booking Confirmation</div>
   </td></tr>

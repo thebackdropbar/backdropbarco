@@ -797,8 +797,14 @@
       return;
     }
     activePicker = type;
-    calYear  = now.getFullYear();
-    calMonth = now.getMonth();
+    // For return picker, start calendar at pickup month; otherwise start at today
+    if (type === 'return' && pickupDate) {
+      calYear  = pickupDate.y;
+      calMonth = pickupDate.m;
+    } else {
+      calYear  = now.getFullYear();
+      calMonth = now.getMonth();
+    }
     selectedDay = null;
     document.getElementById('picker-title').textContent = type === 'pickup' ? 'Needed By' : 'Return By';
     document.getElementById('picker-overlay').style.display = 'block';
@@ -1026,7 +1032,7 @@
     return isNaN(d.getTime()) ? null : d;
   }
 
-  function addToCart() {
+  async function addToCart() {
     // ── BUY mode — no dates needed
     if (currentMode === 'buy') {
       const productId   = new URLSearchParams(window.location.search).get('product') || 'default';
@@ -1107,15 +1113,51 @@
     const productData = (typeof getProduct === 'function') ? getProduct(productId) : null;
     const productType = productData ? (productData.type || 'backdrop') : 'backdrop';
     const damageHold = productData ? (productData.damageHold || 100) : 100;
+
+    // ── Check availability for the requested qty before adding to cart
+    const btn = document.querySelector('.add-to-cart-btn');
+    btn.textContent = 'Checking availability…';
+    btn.disabled = true;
+
+    try {
+      const pickupDtStr = parseDisplayTime(pickup) ? parseDisplayTime(pickup).toISOString() : pickup;
+      const retDtStr    = parseDisplayTime(ret)    ? parseDisplayTime(ret).toISOString()    : ret;
+      const availRes = await fetch('/.netlify/functions/check-availability', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          product_id: productId,
+          pickup_datetime: pickupDtStr,
+          return_datetime: retDtStr,
+          qty_requested: qty
+        })
+      });
+      const availData = await availRes.json();
+      if (!availData.available) {
+        const avail = availData.availableQty - availData.bookedCount;
+        const msg = avail <= 0
+          ? 'Sorry, this item is fully booked for those dates.'
+          : `Only ${avail} available for those dates — please reduce your quantity.`;
+        document.getElementById('rental-duration').textContent = msg;
+        document.getElementById('rental-duration').style.color = '#c9705a';
+        btn.textContent = 'Add to Cart';
+        btn.disabled = false;
+        return;
+      }
+    } catch(e) {
+      // If the check fails, allow through (fail open)
+    }
+
     const item = { title, price, variant, qty, pickup, ret, duration, imgHTML, id: Date.now(), productId, productType, damageHold };
 
     let cart = JSON.parse(localStorage.getItem('tbb_cart') || '[]');
     cart.push(item);
     localStorage.setItem('tbb_cart', JSON.stringify(cart));
 
-    const btn = document.querySelector('.add-to-cart-btn');
     btn.textContent = '✓ Added to Cart';
     btn.style.background = '#7a6a60';
+    btn.disabled = false;
+    updateCartBadge();
     setTimeout(() => {
       btn.textContent = 'Add to Cart';
       btn.style.background = '';

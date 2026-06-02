@@ -594,7 +594,7 @@
       rentalSection.style.display = 'none';
       buySection.style.display = 'block';
       priceLabel.textContent = 'one-time purchase';
-      deliveryNote.textContent = 'Free same-day delivery in the Bay Area';
+      deliveryNote.textContent = '';
       // Show buy price
       const p = (typeof getProduct === 'function') ? getProduct(new URLSearchParams(window.location.search).get('product')) : null;
       if (p && p.buyPrice) productPriceEl.innerHTML = '$' + p.buyPrice.toLocaleString() + ' <span id="priceLabel">one-time purchase</span>';
